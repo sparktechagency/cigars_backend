@@ -20,4 +20,6 @@ export interface IPlace {
   };
   googlePlaceId: string;
   averageRating: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
