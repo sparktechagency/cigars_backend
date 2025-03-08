@@ -28,10 +28,9 @@ const addPlace = async (profileId: string, payload: IPlace) => {
         'Place not found in Google Maps',
       );
     }
-
     const placeDetails = data.result;
-
     const newPlace = {
+      addedby: profileId,
       name: placeDetails.name,
       address: placeDetails.formatted_address,
       location: {

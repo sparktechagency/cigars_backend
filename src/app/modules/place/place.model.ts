@@ -3,6 +3,7 @@ import { IPlace } from './place.interface';
 
 const PlaceSchema = new Schema<IPlace>(
   {
+    addedby: { type: Schema.Types.ObjectId, required: true, ref: 'NormalUser' },
     name: { type: String, required: true },
     address: { type: String, required: true },
     location: {

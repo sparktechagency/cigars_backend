@@ -1,6 +1,7 @@
 import { Types } from 'mongoose';
 
 export interface IPlace {
+  addedby: Types.ObjectId;
   name: string;
   address: string;
   location: {
