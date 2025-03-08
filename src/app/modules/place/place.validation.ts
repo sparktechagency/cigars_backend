@@ -1,5 +1,5 @@
 import { z } from 'zod';
-
+//
 const createPlaceValidationSchema = z.object({
   body: z.object({
     googlePlaceId: z.string({ required_error: 'Google place id is required' }),
