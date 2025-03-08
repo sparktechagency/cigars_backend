@@ -7,7 +7,6 @@ import axios from 'axios';
 import config from '../../config';
 import QueryBuilder from '../../builder/QueryBuilder';
 import Category from '../category/category.model';
-
 // add anew place
 const addPlace = async (profileId: string, payload: IPlace) => {
   try {
@@ -91,8 +90,7 @@ const addPlace = async (profileId: string, payload: IPlace) => {
       //       )
       //     : [],
     };
-
-    // Save to MongoDB
+    // Save to MongoDB----------------
     const result = await Place.create(newPlace);
     return result;
   } catch (error) {
