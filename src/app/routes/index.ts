@@ -5,6 +5,7 @@ import { ManageRoutes } from '../modules/manage-web/manage.routes';
 import { normalUserRoutes } from '../modules/normalUser/normalUser.routes';
 
 import { notificationRoutes } from '../modules/notification/notification.routes';
+import { placeRoutes } from '../modules/place/place.routes';
 
 const router = Router();
 
@@ -29,6 +30,10 @@ const moduleRoutes = [
   {
     path: '/notification',
     router: notificationRoutes,
+  },
+  {
+    path: '/place',
+    router: placeRoutes,
   },
 ];
 
