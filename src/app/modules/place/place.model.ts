@@ -23,6 +23,10 @@ const PlaceSchema = new Schema<IPlace>(
     },
     googlePlaceId: { type: String, required: true, unique: true },
     averageRating: { type: Number, required: true, default: 0 },
+    isApproved: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true },
 );

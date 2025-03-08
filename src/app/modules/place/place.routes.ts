@@ -24,4 +24,11 @@ router.get(
   PlaceController.getSinglePlace,
 );
 
+router.patch(
+  '/approve-reject/:id',
+  auth(USER_ROLE.superAdmin),
+  validateRequest(PlaceValidations.approveRjectValidationSchema),
+  PlaceController.approveRejectPlace,
+);
+
 export const placeRoutes = router;

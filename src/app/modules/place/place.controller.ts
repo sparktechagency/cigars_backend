@@ -33,11 +33,27 @@ const getSinglePlace = catchAsync(async (req, res) => {
     data: result,
   });
 });
+const approveRejectPlace = catchAsync(async (req, res) => {
+  const result = await PlaceService.approveRejectPlace(
+    req.params.id,
+    req.body.status,
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: result
+      ? 'Place approved successfully'
+      : 'Place is rejected successfully',
+    data: result,
+  });
+});
 
 const PlaceController = {
   addPlace,
   getAllPlace,
   getSinglePlace,
+  approveRejectPlace,
 };
 
 export default PlaceController;

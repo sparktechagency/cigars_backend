@@ -21,6 +21,7 @@ export interface IPlace {
   };
   googlePlaceId: string;
   averageRating: number;
+  isApproved: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -8,8 +8,17 @@ const createPlaceValidationSchema = z.object({
   }),
 });
 
+const approveRjectValidationSchema = z.object({
+  body: z.object({
+    status: z.enum(
+      Object.values(['approve', 'reject']) as [string, ...string[]],
+    ),
+  }),
+});
+
 const PlaceValidations = {
   createPlaceValidationSchema,
+  approveRjectValidationSchema,
 };
 
 export default PlaceValidations;
