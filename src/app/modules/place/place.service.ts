@@ -6,17 +6,20 @@ import Place from './place.model';
 import axios from 'axios';
 import config from '../../config';
 import QueryBuilder from '../../builder/QueryBuilder';
+import Category from '../category/category.model';
 
 // add anew place
 const addPlace = async (profileId: string, payload: IPlace) => {
   try {
-    const { googlePlaceId } = payload;
-
+    const { googlePlaceId, placeType } = payload;
+    const category = await Category.findById(placeType);
+    if (!category) {
+      throw new AppError(httpStatus.NOT_FOUND, 'This place type not found');
+    }
     const existingPlace = await Place.findOne({ googlePlaceId });
     if (existingPlace) {
       throw new AppError(httpStatus.BAD_REQUEST, 'This place already exists');
     }
-
     const GOOGLE_API_KEY = config.google_api_key;
     const googleUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${googlePlaceId}&fields=name,formatted_address,geometry/location,formatted_phone_number,opening_hours,rating,photos,types&key=${GOOGLE_API_KEY}`;
 
