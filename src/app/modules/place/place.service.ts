@@ -7,6 +7,7 @@ import axios from 'axios';
 import config from '../../config';
 import QueryBuilder from '../../builder/QueryBuilder';
 
+// add anew place
 const addPlace = async (profileId: string, payload: IPlace) => {
   try {
     const { googlePlaceId } = payload;
