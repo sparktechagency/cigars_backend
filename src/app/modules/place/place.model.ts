@@ -1,5 +1,6 @@
 import mongoose, { Schema } from 'mongoose';
 import { IPlace } from './place.interface';
+import { ENUM_PlACE_STATUS } from '../../utilities/enum';
 
 const PlaceSchema = new Schema<IPlace>(
   {
@@ -23,9 +24,13 @@ const PlaceSchema = new Schema<IPlace>(
     },
     googlePlaceId: { type: String, required: true, unique: true },
     averageRating: { type: Number, required: true, default: 0 },
-    isApproved: {
-      type: Boolean,
-      default: false,
+    description: {
+      type: String,
+    },
+    status: {
+      type: String,
+      enum: Object.values(ENUM_PlACE_STATUS),
+      default: ENUM_PlACE_STATUS.PENDING,
     },
   },
   { timestamps: true },

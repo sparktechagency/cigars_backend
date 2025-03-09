@@ -1,4 +1,5 @@
 import { Types } from 'mongoose';
+import { ENUM_PlACE_STATUS } from '../../utilities/enum';
 
 export interface IPlace {
   addedby: Types.ObjectId;
@@ -21,7 +22,8 @@ export interface IPlace {
   };
   googlePlaceId: string;
   averageRating: number;
-  isApproved: boolean;
+  status: (typeof ENUM_PlACE_STATUS)[keyof typeof ENUM_PlACE_STATUS];
+  description: string;
   createdAt: Date;
   updatedAt: Date;
 }

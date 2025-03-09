@@ -206,19 +206,12 @@ const approveRejectPlace = async (id: string, status: string) => {
   if (!place) {
     throw new AppError(httpStatus.NOT_FOUND, 'Place not found');
   }
-  if (status === 'approve') {
-    const result = await Place.findByIdAndUpdate(
-      id,
-      { isApprove: true },
-      { new: true, runValidators: true },
-    );
-    return result;
-  } else if (status === 'reject') {
-    await Place.findByIdAndDelete(id);
-    return null;
-  }
-
-  return null;
+  const result = await Place.findByIdAndUpdate(
+    id,
+    { status: status },
+    { new: true, runValidators: true },
+  );
+  return result;
 };
 
 const PlaceService = {
