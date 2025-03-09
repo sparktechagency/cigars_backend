@@ -8,6 +8,8 @@ import config from '../../config';
 // import QueryBuilder from '../../builder/QueryBuilder';
 import Category from '../category/category.model';
 import mongoose from 'mongoose';
+import Notification from '../notification/notification.model';
+import NormalUser from '../normalUser/normalUser.model';
 // add anew place
 const addPlace = async (profileId: string, payload: IPlace) => {
   try {
@@ -93,6 +95,13 @@ const addPlace = async (profileId: string, payload: IPlace) => {
     };
     // Save to MongoDB----------------
     const result = await Place.create(newPlace);
+    const user = await NormalUser.findById(profileId);
+    await Notification.create({
+      title: user ? user.firstName + user.lastName : 'Admin',
+      message: `added a new place: ${result.name}`,
+      receiver: 'all',
+    });
+
     return result;
   } catch (error) {
     console.error('Error fetching place details:', error);

@@ -4,7 +4,10 @@ import sendResponse from '../../utilities/sendResponse';
 import RegulationService from './regulation.service';
 
 const createRegulation = catchAsync(async (req, res) => {
-  const result = await RegulationService.createRegulation(req.body);
+  const result = await RegulationService.createRegulation(
+    req.user.profieId,
+    req.body,
+  );
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,

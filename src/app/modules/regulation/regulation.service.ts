@@ -2,9 +2,22 @@ import httpStatus from 'http-status';
 import AppError from '../../error/appError';
 import { IRegulation } from './regulation.interface';
 import Regulation from './regulation.model';
+import Notification from '../notification/notification.model';
+import NormalUser from '../normalUser/normalUser.model';
+import { getIO } from '../../socket/socket';
 
-const createRegulation = async (payload: IRegulation) => {
+const createRegulation = async (profileId: string, payload: IRegulation) => {
+  const io = getIO();
   const result = await Regulation.create(payload);
+  const user = await NormalUser.findById(profileId);
+  await Notification.create({
+    title: user ? user.firstName + user.lastName : 'Admin',
+    message: result.smokingRestriction
+      ? `Added smoking regulation for ${result.country}`
+      : `Added duty free allowance for ${result.country}`,
+    receiver: 'all',
+  });
+
   return result;
 };
 

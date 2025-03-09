@@ -14,7 +14,12 @@ const getAllNotificationFromDB = async (
 ) => {
   if (user?.role === USER_ROLE.superAdmin) {
     const notificationQuery = new QueryBuilder(
-      Notification.find({ receiver: USER_ROLE.superAdmin }),
+      Notification.find(
+        {
+          $or: [{ receiver: USER_ROLE.superAdmin }, { receiver: 'all' }],
+        },
+        { deleteBy: { $ne: user.profileId } },
+      ),
       query,
     )
       .search(['name'])
@@ -27,10 +32,15 @@ const getAllNotificationFromDB = async (
     return { meta, result };
   } else {
     const notificationQuery = new QueryBuilder(
-      Notification.find({ receiver: user?.profileId }),
+      Notification.find(
+        {
+          $or: [{ receiver: user?.profileId }, { receiver: 'all' }],
+        },
+        { deleteBy: { $ne: user?.profileId } },
+      ),
       query,
     )
-      .search(['name'])
+      .search(['title'])
       .filter()
       .sort()
       .paginate()

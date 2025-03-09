@@ -11,15 +11,19 @@ const notificationSchema = new Schema<INotification>(
       type: String,
       required: true,
     },
-    seen: {
-      type: Boolean,
-      default: false,
-    },
+    // seen: {
+    //   type: Boolean,
+    //   default: false,
+    // },
     receiver: {
       type: String,
       required: true,
     },
     deleteBy: {
+      type: [String],
+      default: [],
+    },
+    seenBy: {
       type: [String],
       default: [],
     },
