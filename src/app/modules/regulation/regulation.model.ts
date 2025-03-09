@@ -5,6 +5,7 @@ const regulationSchema = new Schema<IRegulation>({
   country: {
     type: String,
     required: true,
+    unique: true,
   },
   smokingRestriction: {
     type: String,

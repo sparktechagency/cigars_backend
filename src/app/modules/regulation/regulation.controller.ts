@@ -24,10 +24,22 @@ const updateRegulation = catchAsync(async (req, res) => {
     data: result,
   });
 });
+const getSingleRegulation = catchAsync(async (req, res) => {
+  const result = await RegulationService.getSingleRegulation(
+    req.query.country as string,
+  );
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Regulation retrieved successfully',
+    data: result,
+  });
+});
 
 const RegulationController = {
   createRegulation,
   updateRegulation,
+  getSingleRegulation,
 };
 
 export default RegulationController;

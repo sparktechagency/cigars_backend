@@ -21,9 +21,18 @@ const updateRegulation = async (id: string, payload: Partial<IRegulation>) => {
   return result;
 };
 
+const getSingleRegulation = async (country: string) => {
+  const result = await Regulation.findOne({ country: country });
+  if (result) {
+    return result;
+  }
+  return null;
+};
+
 const RegulationService = {
   createRegulation,
   updateRegulation,
+  getSingleRegulation,
 };
 
 export default RegulationService;

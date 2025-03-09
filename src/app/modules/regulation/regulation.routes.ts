@@ -15,4 +15,10 @@ router.patch(
   auth(USER_ROLE.user, USER_ROLE.superAdmin),
   RegulationController.updateRegulation,
 );
+
+router.get(
+  '/get-single-regulation',
+  auth(USER_ROLE.superAdmin, USER_ROLE.user),
+  RegulationController.getSingleRegulation,
+);
 export const regulationRoutes = router;
