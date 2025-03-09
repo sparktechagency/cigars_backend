@@ -12,9 +12,22 @@ const createRegulation = catchAsync(async (req, res) => {
     data: result,
   });
 });
+const updateRegulation = catchAsync(async (req, res) => {
+  const result = await RegulationService.updateRegulation(
+    req.params.id,
+    req.body,
+  );
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Regulation updated successfully',
+    data: result,
+  });
+});
 
 const RegulationController = {
   createRegulation,
+  updateRegulation,
 };
 
 export default RegulationController;

@@ -10,5 +10,9 @@ router.post(
   auth(USER_ROLE.user, USER_ROLE.superAdmin),
   RegulationController.createRegulation,
 );
-
+router.patch(
+  '/update-regulation/:id',
+  auth(USER_ROLE.user, USER_ROLE.superAdmin),
+  RegulationController.updateRegulation,
+);
 export const regulationRoutes = router;
