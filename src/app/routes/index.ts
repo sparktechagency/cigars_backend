@@ -6,6 +6,7 @@ import { normalUserRoutes } from '../modules/normalUser/normalUser.routes';
 
 import { notificationRoutes } from '../modules/notification/notification.routes';
 import { placeRoutes } from '../modules/place/place.routes';
+import { regulationRoutes } from '../modules/regulation/regulation.routes';
 
 const router = Router();
 
@@ -34,6 +35,10 @@ const moduleRoutes = [
   {
     path: '/place',
     router: placeRoutes,
+  },
+  {
+    path: '/regulation',
+    router: regulationRoutes,
   },
 ];
 
