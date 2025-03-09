@@ -5,8 +5,9 @@ import { IPlace } from './place.interface';
 import Place from './place.model';
 import axios from 'axios';
 import config from '../../config';
-import QueryBuilder from '../../builder/QueryBuilder';
+// import QueryBuilder from '../../builder/QueryBuilder';
 import Category from '../category/category.model';
+import mongoose from 'mongoose';
 // add anew place
 const addPlace = async (profileId: string, payload: IPlace) => {
   try {
@@ -98,25 +99,117 @@ const addPlace = async (profileId: string, payload: IPlace) => {
   }
 };
 
-const getAllPlace = async (query: Record<string, unknown>) => {
-  const placeQuery = new QueryBuilder(
-    Place.find()
-      .select('name address location placeType')
-      .populate({ path: 'placeType', select: 'name image' }),
-    query,
-  )
-    .search(['name', 'address'])
-    .fields()
-    .filter()
-    .paginate()
-    .sort();
+// const getAllPlace = async (query: Record<string, unknown>) => {
+//   const placeQuery = new QueryBuilder(
+//     Place.find()
+//       .select('name address location placeType')
+//       .populate({ path: 'placeType', select: 'name image' }),
+//     query,
+//   )
+//     .search(['name', 'address'])
+//     .fields()
+//     .filter()
+//     .paginate()
+//     .sort();
 
-  const result = await placeQuery.modelQuery;
-  const meta = await placeQuery.countTotal();
+//   const result = await placeQuery.modelQuery;
+//   const meta = await placeQuery.countTotal();
+
+//   return {
+//     meta,
+//     result,
+//   };
+// };
+
+const getAllPlace = async (query: Record<string, unknown>) => {
+  const page = parseInt(query.page as string) || 1;
+  const limit = parseInt(query.limit as string) || 10;
+  const skip = (page - 1) * limit;
+  const maxDistance = query.maxDistance || 5000; // 5 km radius
+
+  const pipeline: any[] = [];
+
+  // If latitude & longitude exist, apply geo-filtering
+  if (query.latitude && query.longitude) {
+    pipeline.push({
+      $geoNear: {
+        near: {
+          type: 'Point',
+          coordinates: [
+            parseFloat(query.longitude as string),
+            parseFloat(query.latitude as string),
+          ],
+        },
+        distanceField: 'distance',
+        maxDistance: maxDistance,
+        spherical: true,
+      },
+    });
+  }
+
+  // Add filter conditions
+  const matchConditions: any = {};
+  if (query.country) matchConditions.country = query.country;
+  if (query.city) matchConditions.city = query.city;
+  if (query.placeType)
+    matchConditions.placeType = new mongoose.Types.ObjectId(
+      query.placeType as string,
+    );
+
+  if (Object.keys(matchConditions).length > 0) {
+    pipeline.push({ $match: matchConditions });
+  }
+
+  // Project required fields
+  pipeline.push(
+    {
+      $project: {
+        name: 1,
+        address: 1,
+        city: 1,
+        country: 1,
+        location: 1,
+        placeType: 1,
+        distance: 1,
+      },
+    },
+    {
+      $lookup: {
+        from: 'placetypes',
+        localField: 'placeType',
+        foreignField: '_id',
+        as: 'placeTypeDetails',
+      },
+    },
+    {
+      $unwind: {
+        path: '$placeTypeDetails',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+  );
+
+  // Implement pagination and count total records using `$facet`
+  pipeline.push({
+    $facet: {
+      metadata: [{ $count: 'total' }], // Count total documents
+      data: [{ $skip: skip }, { $limit: limit }], // Pagination
+    },
+  });
+
+  const result = await Place.aggregate(pipeline);
+
+  const total = result[0]?.metadata?.[0]?.total || 0;
+  const totalPages = Math.ceil(total / limit);
 
   return {
-    meta,
-    result,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages,
+    },
+    result: result[0]?.data || [],
   };
 };
 
