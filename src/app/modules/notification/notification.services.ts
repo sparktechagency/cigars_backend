@@ -5,6 +5,9 @@ import { JwtPayload } from 'jsonwebtoken';
 import { USER_ROLE } from '../user/user.constant';
 import QueryBuilder from '../../builder/QueryBuilder';
 import Notification from './notification.model';
+import getAdminNotificationCount from '../../helper/getAdminNotification';
+import { getIO } from '../../socket/socket';
+import getNotificationCount from '../../helper/getUnseenNotification';
 // import getAdminNotificationCount from '../../helper/getAdminNotification';
 // import getUnseenNotificationCount from '../../helper/getUnseenNotification';
 
@@ -53,28 +56,27 @@ const getAllNotificationFromDB = async (
 
 const seeNotification = async (user: JwtPayload) => {
   let result;
+  const io = getIO();
   if (user?.role === USER_ROLE.superAdmin) {
     result = await Notification.updateMany(
-      { receiver: USER_ROLE.superAdmin },
-      { seen: true },
+      { $or: [{ receiver: USER_ROLE.superAdmin }, { receiver: 'all' }] },
+      { $addToSet: { seenBy: user.profileId } },
       { runValidators: true, new: true },
     );
-    // const adminUnseenNotificationCount = await getAdminNotificationCount();
-    //@ts-ignore
-    // global.io.emit('admin-notifications', adminUnseenNotificationCount);
+    const adminUnseenNotificationCount = await getAdminNotificationCount();
+    const notificationCount = await getNotificationCount();
+    io.emit('admin-notifications', adminUnseenNotificationCount);
+    io.emit('notifications', notificationCount);
   }
   if (user?.role !== USER_ROLE.superAdmin) {
     result = await Notification.updateMany(
-      { receiver: user?.profileId },
-      { seen: true },
+      { $or: [{ receiver: user.profileid }, { receiver: 'all' }] },
+      { $addToSet: { seenBy: user.profileId } },
       { runValidators: true, new: true },
     );
   }
-  //   const updatedNotificationCount = await getUnseenNotificationCount(
-  //     user?.userId,
-  //   );
-  //@ts-ignore
-  //   global.io.to(user?.userId).emit('notifications', updatedNotificationCount);
+  const notificationCount = await getNotificationCount(user.profileId);
+  io.to(user.profileId.toString()).emit('notifications', notificationCount);
   return result;
 };
 

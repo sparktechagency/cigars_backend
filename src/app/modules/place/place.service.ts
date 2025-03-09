@@ -10,9 +10,12 @@ import Category from '../category/category.model';
 import mongoose from 'mongoose';
 import Notification from '../notification/notification.model';
 import NormalUser from '../normalUser/normalUser.model';
+import { getIO } from '../../socket/socket';
+import getNotificationCount from '../../helper/getUnseenNotification';
 // add anew place
 const addPlace = async (profileId: string, payload: IPlace) => {
   try {
+    const io = getIO();
     const { googlePlaceId, placeType } = payload;
     const category = await Category.findById(placeType);
     if (!category) {
@@ -101,6 +104,9 @@ const addPlace = async (profileId: string, payload: IPlace) => {
       message: `added a new place: ${result.name}`,
       receiver: 'all',
     });
+    const notificationCount = await getNotificationCount();
+
+    io.emit('notifications', notificationCount);
 
     return result;
   } catch (error) {
