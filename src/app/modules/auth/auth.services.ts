@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-unused-vars */
 import httpStatus from 'http-status';
 import AppError from '../../error/appError';
@@ -13,7 +14,10 @@ import sendEmail from '../../utilities/sendEmail';
 import mongoose from 'mongoose';
 import { USER_ROLE } from '../user/user.constant';
 import NormalUser from '../normalUser/normalUser.model';
-
+import appleSigninAuth from 'apple-signin-auth';
+import { OAuth2Client } from 'google-auth-library';
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+import axios from 'axios';
 const generateVerifyCode = (): number => {
   return Math.floor(10000 + Math.random() * 90000);
 };
@@ -447,6 +451,103 @@ const resendVerifyCode = async (email: string) => {
   return null;
 };
 
+const loginWithOAuth = async (
+  provider: string,
+  token: string,
+  role: TUserRole,
+) => {
+  let email, id, name, picture;
+
+  try {
+    if (provider === 'google') {
+      const ticket = await googleClient.verifyIdToken({
+        idToken: token,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      const payload = ticket.getPayload();
+      if (!payload) {
+        throw new AppError(httpStatus.BAD_REQUEST, 'Invalid token');
+      }
+      email = payload.email!;
+      id = payload.sub;
+      name = payload.name!;
+      picture = payload.picture!;
+    } else if (provider === 'facebook') {
+      const response: any = await axios.get(
+        `https://graph.facebook.com/me?fields=id,email,name,picture&access_token=${token}`,
+      );
+      email = response.data.email;
+      id = response.data.id;
+      name = response.data.name;
+      picture = response.data.picture.data.url;
+    } else if (provider === 'apple') {
+      const appleUser = await appleSigninAuth.verifyIdToken(token, {
+        audience: process.env.APPLE_CLIENT_ID!,
+        ignoreExpiration: false,
+      });
+      email = appleUser.email;
+      id = appleUser.sub;
+      name = 'Apple User';
+    } else {
+      throw new AppError(
+        httpStatus.BAD_REQUEST,
+        'Invalid token, Please try again',
+      );
+    }
+
+    let user = await User.findOne({ [`${provider}Id`]: id });
+
+    if (!user) {
+      user = new User({
+        email,
+        [`${provider}Id`]: id,
+        name,
+        profilePic: picture,
+        role,
+      });
+      await user.save();
+
+      const result = await NormalUser.create({
+        user: user._id,
+        email: email,
+        profile_image: picture,
+      });
+      const updatedUser = await User.findByIdAndUpdate(user._id, {
+        profileId: result._id,
+      });
+      user = updatedUser;
+    }
+    if (!user) {
+      throw new AppError(httpStatus.NOT_FOUND, 'user not found');
+    }
+
+    const jwtPayload = {
+      id: user?._id,
+      profileId: user?.profileId,
+      email: user?.email,
+      role: user?.role as TUserRole,
+    };
+    const accessToken = createToken(
+      jwtPayload,
+      config.jwt_access_secret as string,
+      config.jwt_access_expires_in as string,
+    );
+    const refreshToken = createToken(
+      jwtPayload,
+      config.jwt_refresh_secret as string,
+      config.jwt_refresh_expires_in as string,
+    );
+
+    return { accessToken, refreshToken };
+  } catch (error) {
+    console.error(error);
+    throw new AppError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      'Something went wrong',
+    );
+  }
+};
+
 const authServices = {
   loginUserIntoDB,
   changePasswordIntoDB,
@@ -457,6 +558,7 @@ const authServices = {
   resendResetCode,
   loginWithGoogle,
   resendVerifyCode,
+  loginWithOAuth,
 };
 
 export default authServices;

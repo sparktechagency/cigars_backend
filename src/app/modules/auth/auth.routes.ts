@@ -20,23 +20,13 @@ router.post(
 );
 router.post(
   '/change-password',
-  auth(
-    USER_ROLE.user,
-    USER_ROLE.player,
-    USER_ROLE.team,
-    USER_ROLE.superAdmin,
-  ),
+  auth(USER_ROLE.user, USER_ROLE.player, USER_ROLE.team, USER_ROLE.superAdmin),
   validateRequest(authValidations.changePasswordValidationSchema),
   authControllers.changePassword,
 );
 router.post(
   '/refresh-token',
-  auth(
-    USER_ROLE.user,
-    USER_ROLE.player,
-    USER_ROLE.team,
-    USER_ROLE.superAdmin,
-  ),
+  auth(USER_ROLE.user, USER_ROLE.player, USER_ROLE.team, USER_ROLE.superAdmin),
   validateRequest(authValidations.refreshTokenValidationSchema),
   authControllers.refreshToken,
 );
@@ -68,5 +58,7 @@ router.post(
   validateRequest(authValidations.resendResetCodeValidationSchema),
   authControllers.resendResetCode,
 );
+
+router.post('/oauth-login', authControllers.oAuthLogin);
 
 export const authRoutes = router;

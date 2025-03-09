@@ -2,6 +2,7 @@ import httpStatus from 'http-status';
 import catchAsync from '../../utilities/catchasync';
 import sendResponse from '../../utilities/sendResponse';
 import authServices from './auth.services';
+import AppError from '../../error/appError';
 
 const loginUser = catchAsync(async (req, res) => {
   const result = await authServices.loginUserIntoDB(req.body);
@@ -103,6 +104,25 @@ const resendVerifyCode = catchAsync(async (req, res) => {
   });
 });
 
+const oAuthLogin = catchAsync(async (req, res) => {
+  const { provider, token, role } = req.body;
+  if (!['google', 'apple', 'facebook'].includes(provider)) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'Invalid provider');
+  }
+  const result = await authServices.loginWithOAuth(provider, token, role);
+  res.cookie('refresh-token', result.refreshToken, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'strict',
+  });
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'User login successfully',
+    data: result,
+  });
+});
+
 const authControllers = {
   loginUser,
   changePassword,
@@ -112,7 +132,8 @@ const authControllers = {
   verifyResetOtp,
   resendResetCode,
   googleLogin,
-  resendVerifyCode
+  resendVerifyCode,
+  oAuthLogin,
 };
 
 export default authControllers;
