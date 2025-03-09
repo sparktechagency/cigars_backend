@@ -1,6 +1,6 @@
 import Notification from '../modules/notification/notification.model';
 
-const getUserNotificationCount = async (receiver: string) => {
+const getNotificationCount = async (receiver: string = '') => {
   const unseenCount = await Notification.countDocuments({
     seenBy: { $eq: receiver },
     $or: [{ receiver: receiver }, { receiver: 'all' }],
@@ -13,4 +13,4 @@ const getUserNotificationCount = async (receiver: string) => {
   return { unseenCount, latestNotification };
 };
 
-export default getUserNotificationCount;
+export default getNotificationCount;
