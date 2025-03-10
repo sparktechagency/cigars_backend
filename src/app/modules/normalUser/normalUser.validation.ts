@@ -17,9 +17,8 @@ export const createNormalUserSchema = z.object({
 });
 export const updateNormalUserData = z.object({
   body: z.object({
-    name: z.string().nonempty('Name is required').optional(),
-    phone: z.string().optional(),
-    address: z.string().optional(),
+    firstName: z.string().optional(),
+    lastName: z.string().optional(),
   }),
 });
 
