@@ -171,6 +171,12 @@ const getAllPlace = async (query: Record<string, unknown>) => {
       query.placeType as string,
     );
 
+  if (query.searchTerm) {
+    matchConditions.name = {
+      $regex: new RegExp(query.searchTerm as string, 'i'),
+    };
+  }
+
   if (Object.keys(matchConditions).length > 0) {
     pipeline.push({ $match: matchConditions });
   }
