@@ -28,7 +28,7 @@ const addPlace = async (profileId: string, payload: IPlace) => {
     const GOOGLE_API_KEY = config.google_api_key;
     const googleUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${googlePlaceId}&fields=name,formatted_address,geometry/location,formatted_phone_number,opening_hours,rating,photos,types&key=${GOOGLE_API_KEY}`;
 
-    const { data } = await axios.get(googleUrl);
+    const { data }: { data: any } = await axios.get(googleUrl);
     console.log('data', data);
     if (!data.result) {
       throw new AppError(
@@ -258,7 +258,7 @@ const updatePlaceDetails = async (placeId: string) => {
     const GOOGLE_API_KEY = config.google_api_key;
     const googleUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.googlePlaceId}&fields=rating,opening_hours,photos&key=${GOOGLE_API_KEY}`;
 
-    const { data } = await axios.get(googleUrl);
+    const { data }: { data: any } = await axios.get(googleUrl);
     if (!data.result) {
       throw new AppError(
         httpStatus.NOT_FOUND,
