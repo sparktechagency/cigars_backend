@@ -18,7 +18,10 @@ export interface TUser {
   codeExpireIn: Date;
   isActive: boolean;
   isDeleted: boolean;
+  appleId: string;
+  googleId: string;
 }
+
 export interface TLoginUser {
   email: string;
   password: string;

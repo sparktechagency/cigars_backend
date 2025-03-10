@@ -55,6 +55,12 @@ const userSchema = new Schema<TUser>(
       type: Boolean,
       default: false,
     },
+    appleId: {
+      type: String,
+    },
+    googleId: {
+      type: String,
+    },
   },
   {
     timestamps: true,
