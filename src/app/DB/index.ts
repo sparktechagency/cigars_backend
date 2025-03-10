@@ -5,8 +5,8 @@ import { User } from '../modules/user/user.model';
 import SuperAdmin from '../modules/superAdmin/superAdmin.model';
 
 const superAdminData = {
-  username: 'mradmin',
-  name: 'Mr Admin',
+  firstName: 'Mr',
+  lastName: 'Admin',
   email: config.super_admin_email,
 };
 
@@ -22,7 +22,6 @@ const seedSuperAdmin = async () => {
 
   try {
     const userDataPayload = {
-      username: 'mradmin',
       email: config.super_admin_email,
       password: config.super_admin_password,
       role: USER_ROLE.superAdmin,
