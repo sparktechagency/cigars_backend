@@ -22,6 +22,7 @@ const PlaceSchema = new Schema<IPlace>(
       saturday: { open: String, close: String, closed: Boolean },
       sunday: { open: String, close: String, closed: Boolean },
     },
+    openingHour: [String],
     googlePlaceId: { type: String, required: true, unique: true },
     averageRating: { type: Number, required: true, default: 0 },
     description: {

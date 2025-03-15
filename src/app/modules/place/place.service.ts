@@ -22,18 +22,13 @@ const addPlace = async (profileId: string, payload: IPlace) => {
       throw new AppError(httpStatus.NOT_FOUND, 'This place type not found');
     }
     const existingPlace = await Place.findOne({ googlePlaceId });
-    if (existingPlace) {
-      throw new AppError(httpStatus.BAD_REQUEST, 'This place already exists');
-    }
+    // if (existingPlace) {
+    //   throw new AppError(httpStatus.BAD_REQUEST, 'This place already exists');
+    // }
     const GOOGLE_API_KEY = config.google_api_key;
-    // const googleUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${googlePlaceId}&fields=name,formatted_address,geometry/location,formatted_phone_number,opening_hours,rating,photos,types&key=${GOOGLE_API_KEY}`;
-    const googleUrl = `https://maps.googleapis.com/maps/api/place/details/json
-  ?fields=name%2Crating%2Cformatted_phone_number
-  &place_id=${googlePlaceId}
-  &key=${GOOGLE_API_KEY}`;
+    const googleUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${googlePlaceId}&fields=name,formatted_address,geometry/location,formatted_phone_number,opening_hours,rating,photos,types&key=${GOOGLE_API_KEY}`;
     const { data }: { data: any } = await axios.get(googleUrl);
-    console.log('datadata', data);
-    console.log('data', data);
+    // console.log('respnse data from google place ', data);
     if (!data.result) {
       throw new AppError(
         httpStatus.NOT_FOUND,
@@ -41,6 +36,8 @@ const addPlace = async (profileId: string, payload: IPlace) => {
       );
     }
     const placeDetails = data.result;
+    console.log('place details ', placeDetails);
+    console.log('opening hour', data.result.opening_hours.periods);
     const newPlace = {
       addedby: profileId,
       name: placeDetails.name,
@@ -54,43 +51,53 @@ const addPlace = async (profileId: string, payload: IPlace) => {
       },
       placeType: payload.placeType,
       phone: placeDetails.formatted_phone_number || '',
-      openingHours: {
-        monday: placeDetails.opening_hours?.periods?.[0] || {
-          open: '',
-          close: '',
-          closed: true,
-        },
-        tuesday: placeDetails.opening_hours?.periods?.[1] || {
-          open: '',
-          close: '',
-          closed: true,
-        },
-        wednesday: placeDetails.opening_hours?.periods?.[2] || {
-          open: '',
-          close: '',
-          closed: true,
-        },
-        thursday: placeDetails.opening_hours?.periods?.[3] || {
-          open: '',
-          close: '',
-          closed: true,
-        },
-        friday: placeDetails.opening_hours?.periods?.[4] || {
-          open: '',
-          close: '',
-          closed: true,
-        },
-        saturday: placeDetails.opening_hours?.periods?.[5] || {
-          open: '',
-          close: '',
-          closed: true,
-        },
-        sunday: placeDetails.opening_hours?.periods?.[6] || {
-          open: '',
-          close: '',
-          closed: true,
-        },
-      },
+      // openingHours: {
+      //   monday: placeDetails.opening_hours?.periods?.[0] || {
+      //     open: '',
+      //     close: '',
+      //     closed: true,
+      //   },
+      //   tuesday: placeDetails.opening_hours?.periods?.[1] || {
+      //     open: '',
+      //     close: '',
+      //     closed: true,
+      //   },
+      //   wednesday: placeDetails.opening_hours?.periods?.[2] || {
+      //     open: '',
+      //     close: '',
+      //     closed: true,
+      //   },
+      //   thursday: placeDetails.opening_hours?.periods?.[3] || {
+      //     open: '',
+      //     close: '',
+      //     closed: true,
+      //   },
+      //   friday: placeDetails.opening_hours?.periods?.[4] || {
+      //     open: '',
+      //     close: '',
+      //     closed: true,
+      //   },
+      //   saturday: placeDetails.opening_hours?.periods?.[5] || {
+      //     open: '',
+      //     close: '',
+      //     closed: true,
+      //   },
+      //   sunday: placeDetails.opening_hours?.periods?.[6] || {
+      //     open: '',
+      //     close: '',
+      //     closed: true,
+      //   },
+      // },
+
+      openingHours:
+        placeDetails.opening_hours?.periods?.map((period: any) => ({
+          open: period.open?.time || '',
+          close: period.close?.time || '',
+          openDay: period.open?.day ?? null,
+          closeDay: period.close?.day ?? null,
+          closed: !period.open && !period.close, // Ensures closed is true if both open & close are missing
+        })) || [],
+      openingHour: placeDetails?.opening_hours?.weekday_text,
       googlePlaceId,
       averageRating: placeDetails.rating || 0,
       //   images: placeDetails.photos
@@ -100,6 +107,7 @@ const addPlace = async (profileId: string, payload: IPlace) => {
       //       )
       //     : [],
     };
+    console.log('new place', newPlace);
     // Save to MongoDB----------------
     const result = await Place.create(newPlace);
     const user = await NormalUser.findById(profileId);

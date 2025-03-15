@@ -20,6 +20,7 @@ export interface IPlace {
     saturday: { open: string; close: string; closed: boolean };
     sunday: { open: string; close: string; closed: boolean };
   };
+  openingHour: string[];
   googlePlaceId: string;
   averageRating: number;
   status: (typeof ENUM_PlACE_STATUS)[keyof typeof ENUM_PlACE_STATUS];
