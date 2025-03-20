@@ -58,7 +58,7 @@ app.post('/search-place', async (req, res) => {
     )}&key=${apiKey}`;
     console.log('url', url);
     const response: any = await axios.get(url);
-    // console.log('response', response);
+    console.log('response', response);
 
     if (response.data.status === 'OK') {
       const placeId = response.data.results[0].place_id; // Extract place_id
