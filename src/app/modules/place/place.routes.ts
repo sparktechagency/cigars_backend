@@ -8,27 +8,27 @@ import PlaceController from './place.controller';
 const router = express.Router();
 
 router.post(
-  '/add-place',
-  auth(USER_ROLE.user, USER_ROLE.superAdmin),
-  validateRequest(PlaceValidations.createPlaceValidationSchema),
-  PlaceController.addPlace,
+    '/add-place',
+    auth(USER_ROLE.user, USER_ROLE.superAdmin),
+    validateRequest(PlaceValidations.createPlaceValidationSchema),
+    PlaceController.addPlace
 );
 router.get(
-  '/get-all-place',
-  auth(USER_ROLE.user, USER_ROLE.superAdmin),
-  PlaceController.getAllPlace,
+    '/get-all-place',
+    auth(USER_ROLE.user, USER_ROLE.superAdmin),
+    PlaceController.getAllPlace
 );
 router.get(
-  '/get-single-place/:id',
-  auth(USER_ROLE.user, USER_ROLE.superAdmin),
-  PlaceController.getSinglePlace,
+    '/get-single-place/:id',
+    auth(USER_ROLE.user, USER_ROLE.superAdmin),
+    PlaceController.getSinglePlace
 );
 
 router.patch(
-  '/approve-reject/:id',
-  auth(USER_ROLE.superAdmin),
-  validateRequest(PlaceValidations.approveRjectValidationSchema),
-  PlaceController.approveRejectPlace,
+    '/approve-reject/:id',
+    auth(USER_ROLE.superAdmin),
+    validateRequest(PlaceValidations.approveRjectValidationSchema),
+    PlaceController.approveRejectPlace
 );
 
 export const placeRoutes = router;

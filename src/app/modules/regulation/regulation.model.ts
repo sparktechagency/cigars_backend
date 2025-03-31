@@ -2,17 +2,17 @@ import { model, Schema } from 'mongoose';
 import { IRegulation } from './regulation.interface';
 
 const regulationSchema = new Schema<IRegulation>({
-  country: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  smokingRestriction: {
-    type: String,
-  },
-  dutyFreeAllowance: {
-    type: String,
-  },
+    country: {
+        type: String,
+        required: true,
+        unique: true,
+    },
+    smokingRestriction: {
+        type: String,
+    },
+    dutyFreeAllowance: {
+        type: String,
+    },
 });
 
 const Regulation = model('Regulation', regulationSchema);

@@ -71,11 +71,13 @@ router.patch(
   auth(USER_ROLE.superAdmin),
   ManageController.editAboutUs,
 );
+
 router.patch(
   '/edit-terms-conditions/:id',
   auth(USER_ROLE.superAdmin),
   ManageController.editTermsConditions,
 );
+
 router.patch(
   '/edit-contact-us/:id',
   auth(USER_ROLE.superAdmin),
