@@ -14,145 +14,112 @@ import { getIO } from '../../socket/socket';
 import getNotificationCount from '../../helper/getUnseenNotification';
 // add anew place
 const addPlace = async (profileId: string, payload: IPlace) => {
-    try {
-        const io = getIO();
-        const { googlePlaceId, placeType } = payload;
-        const category = await Category.findById(placeType);
-        if (!category) {
-            throw new AppError(
-                httpStatus.NOT_FOUND,
-                'This place type not found'
-            );
-        }
-        const existingPlace = await Place.findOne({ googlePlaceId });
-        if (existingPlace) {
-            throw new AppError(
-                httpStatus.BAD_REQUEST,
-                'This place already exists'
-            );
-        }
-        const GOOGLE_API_KEY = config.google_api_key;
-        const googleUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${googlePlaceId}&fields=name,formatted_address,geometry/location,formatted_phone_number,opening_hours,rating,photos,types&key=${GOOGLE_API_KEY}`;
-        const { data }: { data: any } = await axios.get(googleUrl);
-        // console.log('respnse data from google place ', data);
-        if (!data.result) {
-            throw new AppError(
-                httpStatus.NOT_FOUND,
-                'Place not found in Google Maps'
-            );
-        }
-        const placeDetails = data.result;
-        console.log('place details ', placeDetails);
-        console.log('opening hour', data.result.opening_hours.periods);
-        const newPlace = {
-            addedby: profileId,
-            name: placeDetails.name,
-            address: placeDetails.formatted_address,
-            location: {
-                type: 'Point',
-                coordinates: [
-                    placeDetails.geometry.location.lng,
-                    placeDetails.geometry.location.lat,
-                ],
-            },
-            placeType: payload.placeType,
-            phone: placeDetails.formatted_phone_number || '',
-            // openingHours: {
-            //   monday: placeDetails.opening_hours?.periods?.[0] || {
-            //     open: '',
-            //     close: '',
-            //     closed: true,
-            //   },
-            //   tuesday: placeDetails.opening_hours?.periods?.[1] || {
-            //     open: '',
-            //     close: '',
-            //     closed: true,
-            //   },
-            //   wednesday: placeDetails.opening_hours?.periods?.[2] || {
-            //     open: '',
-            //     close: '',
-            //     closed: true,
-            //   },
-            //   thursday: placeDetails.opening_hours?.periods?.[3] || {
-            //     open: '',
-            //     close: '',
-            //     closed: true,
-            //   },
-            //   friday: placeDetails.opening_hours?.periods?.[4] || {
-            //     open: '',
-            //     close: '',
-            //     closed: true,
-            //   },
-            //   saturday: placeDetails.opening_hours?.periods?.[5] || {
-            //     open: '',
-            //     close: '',
-            //     closed: true,
-            //   },
-            //   sunday: placeDetails.opening_hours?.periods?.[6] || {
-            //     open: '',
-            //     close: '',
-            //     closed: true,
-            //   },
-            // },
-
-            openingHours:
-                placeDetails.opening_hours?.periods?.map((period: any) => ({
-                    open: period.open?.time || '',
-                    close: period.close?.time || '',
-                    openDay: period.open?.day ?? null,
-                    closeDay: period.close?.day ?? null,
-                    closed: !period.open && !period.close, // Ensures closed is true if both open & close are missing
-                })) || [],
-            openingHour: placeDetails?.opening_hours?.weekday_text,
-            googlePlaceId,
-            averageRating: placeDetails.rating || 0,
-            //   images: placeDetails.photos
-            //     ? placeDetails.photos.map(
-            //         (photo: any) =>
-            //           `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photo.photo_reference}&key=${GOOGLE_API_KEY}`,
-            //       )
-            //     : [],
-        };
-        console.log('new place', newPlace);
-        // Save to MongoDB----------------
-        const result = await Place.create(newPlace);
-        const user = await NormalUser.findById(profileId);
-        await Notification.create({
-            title: user ? user.firstName + user.lastName : 'Admin',
-            message: `added a new place: ${result.name}`,
-            receiver: 'all',
-        });
-        const notificationCount = await getNotificationCount();
-
-        io.emit('notifications', notificationCount);
-
-        return result;
-    } catch (error) {
-        console.error('Error fetching place details:', error);
+    // try {
+    const io = getIO();
+    const { googlePlaceId, placeType } = payload;
+    const category = await Category.findById(placeType);
+    if (!category) {
+        throw new AppError(httpStatus.NOT_FOUND, 'This place type not found');
     }
+    const existingPlace = await Place.findOne({ googlePlaceId });
+    if (existingPlace) {
+        throw new AppError(httpStatus.BAD_REQUEST, 'This place already exists');
+    }
+    const GOOGLE_API_KEY = config.google_api_key;
+    // const googleUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${googlePlaceId}&fields=name,formatted_address,geometry/location,formatted_phone_number,opening_hours,rating,photos,types&key=${GOOGLE_API_KEY}`;
+    const googleUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${googlePlaceId}&fields=name,formatted_address,geometry/location,formatted_phone_number,opening_hours,rating,types&key=${GOOGLE_API_KEY}`;
+    const { data }: { data: any } = await axios.get(googleUrl);
+    if (!data.result) {
+        throw new AppError(
+            httpStatus.NOT_FOUND,
+            'Place not found in Google Maps'
+        );
+    }
+    const placeDetails = data.result;
+    const newPlace = {
+        addedby: profileId,
+        name: placeDetails.name,
+        address: placeDetails.formatted_address,
+        location: {
+            type: 'Point',
+            coordinates: [
+                placeDetails.geometry.location.lng,
+                placeDetails.geometry.location.lat,
+            ],
+        },
+        placeType: payload.placeType,
+        phone: placeDetails.formatted_phone_number || '',
+        // openingHours: {
+        //   monday: placeDetails.opening_hours?.periods?.[0] || {
+        //     open: '',
+        //     close: '',
+        //     closed: true,
+        //   },
+        //   tuesday: placeDetails.opening_hours?.periods?.[1] || {
+        //     open: '',
+        //     close: '',
+        //     closed: true,
+        //   },
+        //   wednesday: placeDetails.opening_hours?.periods?.[2] || {
+        //     open: '',
+        //     close: '',
+        //     closed: true,
+        //   },
+        //   thursday: placeDetails.opening_hours?.periods?.[3] || {
+        //     open: '',
+        //     close: '',
+        //     closed: true,
+        //   },
+        //   friday: placeDetails.opening_hours?.periods?.[4] || {
+        //     open: '',
+        //     close: '',
+        //     closed: true,
+        //   },
+        //   saturday: placeDetails.opening_hours?.periods?.[5] || {
+        //     open: '',
+        //     close: '',
+        //     closed: true,
+        //   },
+        //   sunday: placeDetails.opening_hours?.periods?.[6] || {
+        //     open: '',
+        //     close: '',
+        //     closed: true,
+        //   },
+        // },
+
+        openingHours:
+            placeDetails.opening_hours?.periods?.map((period: any) => ({
+                open: period.open?.time || '',
+                close: period.close?.time || '',
+                openDay: period.open?.day ?? null,
+                closeDay: period.close?.day ?? null,
+                closed: !period.open && !period.close, // Ensures closed is true if both open & close are missing
+            })) || [],
+        openingHour: placeDetails?.opening_hours?.weekday_text,
+        googlePlaceId,
+        averageRating: placeDetails.rating || 0,
+        //   images: placeDetails.photos
+        //     ? placeDetails.photos.map(
+        //         (photo: any) =>
+        //           `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photo.photo_reference}&key=${GOOGLE_API_KEY}`,
+        //       )
+        //     : [],
+    };
+    console.log('new place', newPlace);
+    // Save to MongoDB----------------
+    const result = await Place.create(newPlace);
+    const user = await NormalUser.findById(profileId);
+    await Notification.create({
+        title: user ? user.firstName + user.lastName : 'Admin',
+        message: `added a new place: ${result.name}`,
+        receiver: 'all',
+    });
+    const notificationCount = await getNotificationCount();
+
+    io.emit('notifications', notificationCount);
+
+    return result;
 };
-
-// const getAllPlace = async (query: Record<string, unknown>) => {
-//   const placeQuery = new QueryBuilder(
-//     Place.find()
-//       .select('name address location placeType')
-//       .populate({ path: 'placeType', select: 'name image' }),
-//     query,
-//   )
-//     .search(['name', 'address'])
-//     .fields()
-//     .filter()
-//     .paginate()
-//     .sort();
-
-//   const result = await placeQuery.modelQuery;
-//   const meta = await placeQuery.countTotal();
-
-//   return {
-//     meta,
-//     result,
-//   };
-// };
 
 const getAllPlace = async (query: Record<string, unknown>) => {
     const page = parseInt(query.page as string) || 1;
@@ -280,9 +247,10 @@ const updatePlaceDetails = async (placeId: string) => {
         }
 
         const GOOGLE_API_KEY = config.google_api_key;
-        const googleUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.googlePlaceId}&fields=rating,opening_hours,photos&key=${GOOGLE_API_KEY}`;
-
+        // const googleUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.googlePlaceId}&fields=rating,opening_hours,photos&key=${GOOGLE_API_KEY}`;
+        const googleUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.googlePlaceId}&fields=name,formatted_address,geometry/location,formatted_phone_number,opening_hours,rating,types&key=${GOOGLE_API_KEY}`;
         const { data }: { data: any } = await axios.get(googleUrl);
+        console.log('data', data);
         if (!data.result) {
             throw new AppError(
                 httpStatus.NOT_FOUND,
@@ -292,29 +260,15 @@ const updatePlaceDetails = async (placeId: string) => {
 
         const updatedData = {
             averageRating: data.result.rating || place.averageRating,
-            openingHours: {
-                monday:
-                    data.result.opening_hours?.periods?.[0] ||
-                    place.openingHours.monday,
-                tuesday:
-                    data.result.opening_hours?.periods?.[1] ||
-                    place.openingHours.tuesday,
-                wednesday:
-                    data.result.opening_hours?.periods?.[2] ||
-                    place.openingHours.wednesday,
-                thursday:
-                    data.result.opening_hours?.periods?.[3] ||
-                    place.openingHours.thursday,
-                friday:
-                    data.result.opening_hours?.periods?.[4] ||
-                    place.openingHours.friday,
-                saturday:
-                    data.result.opening_hours?.periods?.[5] ||
-                    place.openingHours.saturday,
-                sunday:
-                    data.result.opening_hours?.periods?.[6] ||
-                    place.openingHours.sunday,
-            },
+
+            openingHours:
+                data.opening_hours?.periods?.map((period: any) => ({
+                    open: period.open?.time || '',
+                    close: period.close?.time || '',
+                    openDay: period.open?.day ?? null,
+                    closeDay: period.close?.day ?? null,
+                    closed: !period.open && !period.close, // Ensures closed is true if both open & close are missing
+                })) || [],
             //   images: data.result.photos
             //     ? data.result.photos.map(
             //         (photo: any) =>
