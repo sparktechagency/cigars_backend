@@ -129,7 +129,7 @@ const getAllPlace = async (query: Record<string, unknown>) => {
 
     const pipeline: any[] = [];
 
-    // If latitude & longitude exist, apply geo-filtering
+    //apply geo-filtering
     if (query.latitude && query.longitude) {
         pipeline.push({
             $geoNear: {
@@ -198,8 +198,8 @@ const getAllPlace = async (query: Record<string, unknown>) => {
     // Implement pagination and count total records using `$facet`
     pipeline.push({
         $facet: {
-            metadata: [{ $count: 'total' }], // Count total documents
-            data: [{ $skip: skip }, { $limit: limit }], // Pagination
+            metadata: [{ $count: 'total' }],
+            data: [{ $skip: skip }, { $limit: limit }],
         },
     });
 
