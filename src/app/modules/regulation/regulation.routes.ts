@@ -3,7 +3,9 @@ import auth from '../../middlewares/auth';
 import { USER_ROLE } from '../user/user.constant';
 import RegulationController from './regulation.controller';
 import validateRequest from '../../middlewares/validateRequest';
-import regulationSchema from './regulation.validation';
+import regulationSchema, {
+    updateRegulationValidationSchema,
+} from './regulation.validation';
 
 const router = express.Router();
 
@@ -16,7 +18,7 @@ router.post(
 router.patch(
     '/update-regulation/:id',
     auth(USER_ROLE.user, USER_ROLE.superAdmin),
-    validateRequest(regulationSchema),
+    validateRequest(updateRegulationValidationSchema),
     RegulationController.updateRegulation
 );
 

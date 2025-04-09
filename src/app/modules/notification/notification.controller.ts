@@ -27,9 +27,23 @@ const seeNotification = catchAsync(async (req, res) => {
     });
 });
 
+const deleteNotification = catchAsync(async (req, res) => {
+    const result = await notificationService.deleteNotification(
+        req.params.id,
+        req.user.profileId
+    );
+    sendResponse(res, {
+        statusCode: 200,
+        success: true,
+        message: 'Notification removed',
+        data: result,
+    });
+});
+
 const notificationController = {
     getAllNotification,
     seeNotification,
+    deleteNotification,
 };
 
 export default notificationController;

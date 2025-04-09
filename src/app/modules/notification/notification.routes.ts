@@ -25,4 +25,10 @@ router.patch(
     notificationController.seeNotification
 );
 
+router.delete(
+    '/delete-notification/:id',
+    auth(USER_ROLE.user, USER_ROLE.superAdmin),
+    notificationController.deleteNotification
+);
+
 export const notificationRoutes = router;

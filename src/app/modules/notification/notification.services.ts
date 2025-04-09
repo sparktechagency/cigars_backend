@@ -8,6 +8,8 @@ import Notification from './notification.model';
 import getAdminNotificationCount from '../../helper/getAdminNotification';
 import { getIO } from '../../socket/socket';
 import getNotificationCount from '../../helper/getUnseenNotification';
+import AppError from '../../error/appError';
+import httpStatus from 'http-status';
 
 const getAllNotificationFromDB = async (
     query: Record<string, any>,
@@ -15,15 +17,10 @@ const getAllNotificationFromDB = async (
 ) => {
     if (user?.role === USER_ROLE.superAdmin) {
         const notificationQuery = new QueryBuilder(
-            Notification.find(
-                {
-                    $or: [
-                        { receiver: USER_ROLE.superAdmin },
-                        { receiver: 'all' },
-                    ],
-                },
-                { deleteBy: { $ne: user.profileId } }
-            ),
+            Notification.find({
+                $or: [{ receiver: USER_ROLE.superAdmin }, { receiver: 'all' }],
+                deleteBy: { $ne: user.profileId },
+            }),
             query
         )
             .search(['name'])
@@ -81,9 +78,28 @@ const seeNotification = async (user: JwtPayload) => {
     return result;
 };
 
+const deleteNotification = async (id: string, profileId: string) => {
+    const notification = await Notification.findById(id);
+    if (!notification) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Notification not found');
+    }
+    if (notification.receiver == profileId) {
+        const reusult = await Notification.findByIdAndDelete(id);
+        return reusult;
+    } else if (notification.receiver == 'all') {
+        const result = await Notification.findByIdAndUpdate(id, {
+            $addToSet: { deleteBy: profileId },
+        });
+        return result;
+    } else {
+        return null;
+    }
+};
+
 const notificationService = {
     getAllNotificationFromDB,
     seeNotification,
+    deleteNotification,
 };
 
 export default notificationService;
