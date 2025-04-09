@@ -5,14 +5,13 @@ import { IPlace } from './place.interface';
 import Place from './place.model';
 import axios from 'axios';
 import config from '../../config';
-// import QueryBuilder from '../../builder/QueryBuilder';
 import Category from '../category/category.model';
 import mongoose from 'mongoose';
 import Notification from '../notification/notification.model';
 import NormalUser from '../normalUser/normalUser.model';
 import { getIO } from '../../socket/socket';
 import getNotificationCount from '../../helper/getUnseenNotification';
-// add anew place
+// add anew place---------------------------
 const addPlace = async (profileId: string, payload: IPlace) => {
     const io = getIO();
     const { googlePlaceId, placeType } = payload;
@@ -105,7 +104,6 @@ const addPlace = async (profileId: string, payload: IPlace) => {
         //     : [],
     };
     console.log('new place', newPlace);
-    // Save to MongoDB----------------
     const result = await Place.create(newPlace);
     const user = await NormalUser.findById(profileId);
     await Notification.create({
@@ -128,7 +126,7 @@ const getAllPlace = async (query: Record<string, unknown>) => {
 
     const pipeline: any[] = [];
 
-    //apply geo-filtering
+    //apply geo-filtering -------------
     if (query.latitude && query.longitude) {
         pipeline.push({
             $geoNear: {
@@ -146,7 +144,7 @@ const getAllPlace = async (query: Record<string, unknown>) => {
         });
     }
 
-    // Add filter conditions
+    // filter conditions --------------------------
     const matchConditions: any = {};
     if (query.country) matchConditions.country = query.country;
     if (query.city) matchConditions.city = query.city;
@@ -165,7 +163,7 @@ const getAllPlace = async (query: Record<string, unknown>) => {
         pipeline.push({ $match: matchConditions });
     }
 
-    // Project required fields
+    // for projection---------------
     pipeline.push(
         {
             $project: {
@@ -267,7 +265,7 @@ const updatePlaceDetails = async (placeId: string) => {
                     close: period.close?.time || '',
                     openDay: period.open?.day ?? null,
                     closeDay: period.close?.day ?? null,
-                    closed: !period.open && !period.close, // Ensures closed is true if both open & close are missing
+                    closed: !period.open && !period.close,
                 })) || [],
             //   images: data.result.photos
             //     ? data.result.photos.map(
@@ -277,7 +275,6 @@ const updatePlaceDetails = async (placeId: string) => {
             //     : place.images,
         };
 
-        // Update place in the database
         const result = await Place.findByIdAndUpdate(placeId, updatedData, {
             new: true,
         });
