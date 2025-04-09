@@ -14,7 +14,6 @@ import { getIO } from '../../socket/socket';
 import getNotificationCount from '../../helper/getUnseenNotification';
 // add anew place
 const addPlace = async (profileId: string, payload: IPlace) => {
-    // try {
     const io = getIO();
     const { googlePlaceId, placeType } = payload;
     const category = await Category.findById(placeType);
@@ -111,7 +110,7 @@ const addPlace = async (profileId: string, payload: IPlace) => {
     const user = await NormalUser.findById(profileId);
     await Notification.create({
         title: user ? user.firstName + user.lastName : 'Admin',
-        message: `added a new place: ${result.name}`,
+        message: `Added a new place: ${result.name}`,
         receiver: 'all',
     });
     const notificationCount = await getNotificationCount();
@@ -293,6 +292,7 @@ const updatePlaceDetails = async (placeId: string) => {
 };
 
 const approveRejectPlace = async (id: string, status: string) => {
+    const io = getIO();
     const place = await Place.findById(id);
     if (!place) {
         throw new AppError(httpStatus.NOT_FOUND, 'Place not found');
@@ -302,6 +302,16 @@ const approveRejectPlace = async (id: string, status: string) => {
         { status: status },
         { new: true, runValidators: true }
     );
+
+    await Notification.create({
+        title: 'Place rejected',
+        message: `Admin ${status} you added place: ${place.name}`,
+        receiver: 'all',
+    });
+    const notificationCount = await getNotificationCount(
+        place.addedby.toString()
+    );
+    io.to(place.addedby.toString()).emit('notifications', notificationCount);
     return result;
 };
 
