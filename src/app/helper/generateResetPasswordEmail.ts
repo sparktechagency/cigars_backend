@@ -1,5 +1,5 @@
 const generateResetPasswordEmail = (resetLink: string): string => {
-  return `
+    return `
   <!DOCTYPE html>
   <html lang="en">
   

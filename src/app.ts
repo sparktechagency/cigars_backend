@@ -16,21 +16,10 @@ import axios from 'axios';
 app.use(express.json());
 app.use(cookieParser());
 app.use(
-  cors({
-    origin: [
-      'http://localhost:5173',
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'http://localhost:3002',
-      'http://localhost:3003',
-      'http://localhost:3004',
-      'http://localhost:3005',
-      'http://localhost:3006',
-      'http://localhost:3007',
-      'http://localhost:3008',
-    ],
-    credentials: true,
-  }),
+    cors({
+        origin: ['http://localhost:3007', 'http://localhost:3008'],
+        credentials: true,
+    })
 );
 app.use('/uploads', express.static('uploads'));
 // application routers ----------------
@@ -38,40 +27,40 @@ app.use('/', router);
 app.post('/contact-us', sendContactUsEmail);
 
 app.get('/', async (req, res) => {
-  res.send({ message: 'nice to meet you' });
+    res.send({ message: 'nice to meet you' });
 });
 
 const apiKey = process.env.GOOGLE_API_KEY; // Replace with your API key
 
 app.post('/search-place', async (req, res) => {
-  try {
-    const { address } = req.body; // Get address from the request body
+    try {
+        const { address } = req.body; // Get address from the request body
 
-    if (!address) {
-      return res.status(400).json({ error: 'Address is required' });
+        if (!address) {
+            return res.status(400).json({ error: 'Address is required' });
+        }
+        console.log('key', apiKey);
+
+        console.log(encodeURIComponent(address));
+        const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+            address
+        )}&key=${apiKey}`;
+        console.log('url', url);
+        const response: any = await axios.get(url);
+        console.log('response', response);
+
+        if (response.data.status === 'OK') {
+            const placeId = response.data.results[0].place_id; // Extract place_id
+            return res.status(200).json({ placeId });
+        } else {
+            return res
+                .status(400)
+                .json({ error: 'Place not found or invalid request' });
+        }
+    } catch (error) {
+        console.error('API request error:', error);
+        return res.status(500).json({ error: 'Internal server error' });
     }
-    console.log('key', apiKey);
-
-    console.log(encodeURIComponent(address));
-    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
-      address,
-    )}&key=${apiKey}`;
-    console.log('url', url);
-    const response: any = await axios.get(url);
-    console.log('response', response);
-
-    if (response.data.status === 'OK') {
-      const placeId = response.data.results[0].place_id; // Extract place_id
-      return res.status(200).json({ placeId });
-    } else {
-      return res
-        .status(400)
-        .json({ error: 'Place not found or invalid request' });
-    }
-  } catch (error) {
-    console.error('API request error:', error);
-    return res.status(500).json({ error: 'Internal server error' });
-  }
 });
 
 // global error handler
