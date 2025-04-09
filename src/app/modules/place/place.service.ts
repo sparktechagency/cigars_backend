@@ -224,6 +224,7 @@ const getSinglePlace = async (id: string) => {
     if (!place) {
         throw new AppError(httpStatus.NOT_FOUND, 'Place not found');
     }
+    //!TODO: if need to increase or decrase update place time
     const TWO_DAYS = 2 * 24 * 60 * 60 * 1000;
     const lastUpdated = new Date(place.updatedAt).getTime();
     const now = Date.now();

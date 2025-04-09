@@ -9,40 +9,45 @@ import { USER_ROLE } from './user.constant';
 const router = Router();
 
 router.post(
-  '/register-user',
-  validateRequest(normalUserValidations.createNormalUserSchema),
-  userControllers.registerUser,
+    '/register-user',
+    validateRequest(normalUserValidations.createNormalUserSchema),
+    userControllers.registerUser
 );
 
 router.post(
-  '/verify-code',
-  validateRequest(userValidations.verifyCodeValidationSchema),
-  userControllers.verifyCode,
+    '/verify-code',
+    validateRequest(userValidations.verifyCodeValidationSchema),
+    userControllers.verifyCode
 );
 
 router.post(
-  '/resend-verify-code',
-  validateRequest(userValidations.resendVerifyCodeSchema),
-  userControllers.resendVerifyCode,
+    '/resend-verify-code',
+    validateRequest(userValidations.resendVerifyCodeSchema),
+    userControllers.resendVerifyCode
 );
 
 router.get(
-  '/get-my-profile',
-  auth(USER_ROLE.user, USER_ROLE.player, USER_ROLE.team, USER_ROLE.superAdmin),
-  userControllers.getMyProfile,
+    '/get-my-profile',
+    auth(
+        USER_ROLE.user,
+        USER_ROLE.player,
+        USER_ROLE.team,
+        USER_ROLE.superAdmin
+    ),
+    userControllers.getMyProfile
 );
 
 router.patch(
-  '/change-status/:id',
-  auth(USER_ROLE.superAdmin),
-  validateRequest(userValidations.changeUserStatus),
-  userControllers.changeUserStatus,
+    '/change-status/:id',
+    auth(USER_ROLE.superAdmin),
+    validateRequest(userValidations.changeUserStatus),
+    userControllers.changeUserStatus
 );
 router.delete(
-  '/delete-account',
-  auth(USER_ROLE.user),
-  validateRequest(userValidations.deleteUserAccountValidationSchema),
-  userControllers.deleteUserAccount,
+    '/delete-account',
+    auth(USER_ROLE.user),
+    validateRequest(userValidations.deleteUserAccountValidationSchema),
+    userControllers.deleteUserAccount
 );
 
 export const userRoutes = router;
