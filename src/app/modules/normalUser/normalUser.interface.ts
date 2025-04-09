@@ -2,9 +2,9 @@
 import { Types } from 'mongoose';
 
 export interface INormalUser {
-  user: Types.ObjectId;
-  firstName: string;
-  lastName: string;
-  email: string;
-  profile_image: string;
+    user: Types.ObjectId;
+    firstName: string;
+    lastName: string;
+    email: string;
+    profile_image: string;
 }

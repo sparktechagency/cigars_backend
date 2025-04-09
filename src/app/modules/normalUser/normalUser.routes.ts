@@ -9,17 +9,17 @@ import { uploadFile } from '../../helper/fileUploader';
 const router = express.Router();
 
 router.patch(
-  '/update-profile',
-  auth(USER_ROLE.user),
-  uploadFile(),
-  (req: Request, res: Response, next: NextFunction) => {
-    if (req.body.data) {
-      req.body = JSON.parse(req.body.data);
-    }
-    next();
-  },
-  validateRequest(normalUserValidations.updateNormalUserData),
-  NormalUserController.updateUserProfile,
+    '/update-profile',
+    auth(USER_ROLE.user),
+    uploadFile(),
+    (req: Request, res: Response, next: NextFunction) => {
+        if (req.body.data) {
+            req.body = JSON.parse(req.body.data);
+        }
+        next();
+    },
+    validateRequest(normalUserValidations.updateNormalUserData),
+    NormalUserController.updateUserProfile
 );
 
 export const normalUserRoutes = router;

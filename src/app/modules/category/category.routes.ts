@@ -9,38 +9,38 @@ import { uploadFile } from '../../helper/fileUploader';
 const router = express.Router();
 
 router.post(
-  '/create-category',
-  auth(USER_ROLE.superAdmin),
-  uploadFile(),
-  (req: Request, res: Response, next: NextFunction) => {
-    if (req.body.data) {
-      req.body = JSON.parse(req.body.data);
-    }
-    next();
-  },
-  validateRequest(categoryValidation.createCategoryValidationSchema),
-  categoryController.createCategory,
+    '/create-category',
+    auth(USER_ROLE.superAdmin),
+    uploadFile(),
+    (req: Request, res: Response, next: NextFunction) => {
+        if (req.body.data) {
+            req.body = JSON.parse(req.body.data);
+        }
+        next();
+    },
+    validateRequest(categoryValidation.createCategoryValidationSchema),
+    categoryController.createCategory
 );
 router.patch(
-  '/update-category/:id',
-  auth(USER_ROLE.superAdmin),
-  uploadFile(),
-  (req: Request, res: Response, next: NextFunction) => {
-    if (req.body.data) {
-      req.body = JSON.parse(req.body.data);
-    }
-    next();
-  },
-  validateRequest(categoryValidation.updateCategoryValidationSchema),
-  categoryController.updateCategory,
+    '/update-category/:id',
+    auth(USER_ROLE.superAdmin),
+    uploadFile(),
+    (req: Request, res: Response, next: NextFunction) => {
+        if (req.body.data) {
+            req.body = JSON.parse(req.body.data);
+        }
+        next();
+    },
+    validateRequest(categoryValidation.updateCategoryValidationSchema),
+    categoryController.updateCategory
 );
 
 router.get('/all-categories', categoryController.getAllCategories);
 router.get('/get-single-category/:id', categoryController.getSingleCategory);
 router.delete(
-  '/delete-category/:id',
-  auth(USER_ROLE.superAdmin),
-  categoryController.deleteCategory,
+    '/delete-category/:id',
+    auth(USER_ROLE.superAdmin),
+    categoryController.deleteCategory
 );
 
 export const categoryRoutes = router;
