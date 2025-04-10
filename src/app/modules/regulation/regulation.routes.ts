@@ -21,7 +21,7 @@ router.patch(
     validateRequest(updateRegulationValidationSchema),
     RegulationController.updateRegulation
 );
-
+// get single regulation ---------
 router.get(
     '/get-single-regulation',
     auth(USER_ROLE.superAdmin, USER_ROLE.user),
