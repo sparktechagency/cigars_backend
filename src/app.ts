@@ -12,7 +12,7 @@ import notFound from './app/middlewares/notFound';
 const app: Application = express();
 import sendContactUsEmail from './app/helper/sendContactUsEmail';
 import axios from 'axios';
-// parser
+// parser----------------
 app.use(express.json());
 app.use(cookieParser());
 app.use(
