@@ -30,7 +30,7 @@ app.get('/', async (req, res) => {
     res.send({ message: 'nice to meet you' });
 });
 
-const apiKey = process.env.GOOGLE_API_KEY; // Replace with your API key
+const apiKey = process.env.GOOGLE_API_KEY; // Replace with your API key------------
 
 app.post('/search-place', async (req, res) => {
     try {
