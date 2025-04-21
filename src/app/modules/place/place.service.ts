@@ -103,7 +103,7 @@ const addPlace = async (profileId: string, payload: IPlace) => {
         //       )
         //     : [],
     };
-    console.log('new place', newPlace);
+    // console.log('new place', newPlace);
     const result = await Place.create(newPlace);
     const user = await NormalUser.findById(profileId);
     await Notification.create({
