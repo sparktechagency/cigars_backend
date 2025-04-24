@@ -9,6 +9,8 @@ export interface IPlace {
         type: 'Point';
         coordinates: [number, number];
     };
+    city: string;
+    country: string;
     placeType: Types.ObjectId;
     phone?: string;
     openingHours: {

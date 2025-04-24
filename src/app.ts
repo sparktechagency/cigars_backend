@@ -12,6 +12,8 @@ import notFound from './app/middlewares/notFound';
 const app: Application = express();
 import sendContactUsEmail from './app/helper/sendContactUsEmail';
 import axios from 'axios';
+import { getAllCities, getAllCountries } from './app/helper/getAllCities';
+import Category from './app/modules/category/category.model';
 // parser----------------
 app.use(express.json());
 app.use(cookieParser());
@@ -59,6 +61,17 @@ app.post('/search-place', async (req, res) => {
         }
     } catch (error) {
         console.error('API request error:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.get('/get-country-city', async (req, res) => {
+    try {
+        const city = await getAllCities();
+        const country = await getAllCountries();
+        const placeTypes = await Category.find({}).select('name');
+        return res.status(200).json({ city, country, placeTypes });
+    } catch (error) {
         return res.status(500).json({ error: 'Internal server error' });
     }
 });

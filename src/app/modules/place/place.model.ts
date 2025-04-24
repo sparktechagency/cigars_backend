@@ -10,6 +10,7 @@ const PlaceSchema = new Schema<IPlace>(
             ref: 'NormalUser',
         },
         name: { type: String, required: true },
+        description: { type: String, default: '' },
         address: { type: String, required: true },
         location: {
             type: {
@@ -20,6 +21,8 @@ const PlaceSchema = new Schema<IPlace>(
             },
             coordinates: { type: [Number], required: true, index: '2dsphere' },
         },
+        city: { type: String, default: '' },
+        country: { type: String, default: '' },
         placeType: {
             type: Schema.Types.ObjectId,
             ref: 'Category',
@@ -38,9 +41,6 @@ const PlaceSchema = new Schema<IPlace>(
         openingHour: [String],
         googlePlaceId: { type: String, required: true, unique: true },
         averageRating: { type: Number, required: true, default: 0 },
-        description: {
-            type: String,
-        },
         status: {
             type: String,
             enum: Object.values(ENUM_PlACE_STATUS),

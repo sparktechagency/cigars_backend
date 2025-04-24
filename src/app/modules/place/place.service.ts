@@ -14,7 +14,7 @@ import getNotificationCount from '../../helper/getUnseenNotification';
 // add anew place---------------------------
 const addPlace = async (profileId: string, payload: IPlace) => {
     const io = getIO();
-    const { googlePlaceId, placeType } = payload;
+    const { googlePlaceId, placeType, description } = payload;
     const category = await Category.findById(placeType);
     if (!category) {
         throw new AppError(httpStatus.NOT_FOUND, 'This place type not found');
@@ -34,9 +34,16 @@ const addPlace = async (profileId: string, payload: IPlace) => {
         );
     }
     const placeDetails = data.result;
+    console.log('place ===============', placeDetails);
+    // Split the address by commas
+    const addressParts = placeDetails?.formatted_address?.split(', ');
+
+    const city = addressParts[addressParts.length - 3];
+    const country = addressParts[addressParts.length - 1];
     const newPlace = {
         addedby: profileId,
         name: placeDetails.name,
+        description,
         address: placeDetails.formatted_address,
         location: {
             type: 'Point',
@@ -45,6 +52,8 @@ const addPlace = async (profileId: string, payload: IPlace) => {
                 placeDetails.geometry.location.lat,
             ],
         },
+        city,
+        country,
         placeType: payload.placeType,
         phone: placeDetails.formatted_phone_number || '',
         // openingHours: {
