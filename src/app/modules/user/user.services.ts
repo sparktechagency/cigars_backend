@@ -14,229 +14,237 @@ import sendEmail from '../../utilities/sendEmail';
 import { JwtPayload } from 'jsonwebtoken';
 import { createToken } from './user.utils';
 import config from '../../config';
+import SuperAdmin from '../superAdmin/superAdmin.model';
 const generateVerifyCode = (): number => {
-  return Math.floor(10000 + Math.random() * 90000);
+    return Math.floor(10000 + Math.random() * 90000);
 };
 
 const registerUser = async (
-  password: string,
-  confirmPassword: string,
-  userData: INormalUser,
+    password: string,
+    confirmPassword: string,
+    userData: INormalUser
 ) => {
-  if (password !== confirmPassword) {
-    throw new AppError(
-      httpStatus.BAD_REQUEST,
-      "Password and confirm password doesn't match",
-    );
-  }
+    if (password !== confirmPassword) {
+        throw new AppError(
+            httpStatus.BAD_REQUEST,
+            "Password and confirm password doesn't match"
+        );
+    }
 
-  const emailExist = await User.findOne({ email: userData.email });
-  if (emailExist) {
-    throw new AppError(httpStatus.BAD_REQUEST, 'This email already exist');
-  }
-  const session = await mongoose.startSession();
-  session.startTransaction();
+    const emailExist = await User.findOne({ email: userData.email });
+    if (emailExist) {
+        throw new AppError(httpStatus.BAD_REQUEST, 'This email already exist');
+    }
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-  try {
-    const verifyCode = generateVerifyCode();
-    const userDataPayload: Partial<TUser> = {
-      email: userData?.email,
-      password: password,
-      role: USER_ROLE.user,
-      verifyCode,
-      codeExpireIn: new Date(Date.now() + 2 * 60000),
-    };
+    try {
+        const verifyCode = generateVerifyCode();
+        const userDataPayload: Partial<TUser> = {
+            email: userData?.email,
+            password: password,
+            role: USER_ROLE.user,
+            verifyCode,
+            codeExpireIn: new Date(Date.now() + 2 * 60000),
+        };
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const user = await User.create([userDataPayload], { session });
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const user = await User.create([userDataPayload], { session });
 
-    const normalUserPayload = {
-      ...userData,
-      user: user[0]._id,
-    };
-    const result = await NormalUser.create([normalUserPayload], { session });
+        const normalUserPayload = {
+            ...userData,
+            user: user[0]._id,
+        };
+        const result = await NormalUser.create([normalUserPayload], {
+            session,
+        });
 
-    await User.findByIdAndUpdate(
-      user[0]._id,
-      { profileId: result[0]._id },
-      { session },
-    );
+        await User.findByIdAndUpdate(
+            user[0]._id,
+            { profileId: result[0]._id },
+            { session }
+        );
 
-    sendEmail({
-      email: userData.email,
-      subject: 'Activate Your Account',
-      html: registrationSuccessEmailBody(
-        result[0].firstName,
-        user[0].verifyCode,
-      ),
-    });
+        sendEmail({
+            email: userData.email,
+            subject: 'Activate Your Account',
+            html: registrationSuccessEmailBody(
+                result[0].firstName,
+                user[0].verifyCode
+            ),
+        });
 
-    await session.commitTransaction();
-    session.endSession();
+        await session.commitTransaction();
+        session.endSession();
 
-    return result[0];
-  } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
-    throw error;
-  }
+        return result[0];
+    } catch (error) {
+        await session.abortTransaction();
+        session.endSession();
+        throw error;
+    }
 };
 
 const verifyCode = async (email: string, verifyCode: number) => {
-  const user = await User.findOne({ email: email });
-  if (!user) {
-    throw new AppError(httpStatus.NOT_FOUND, 'User not found');
-  }
-  if (user.codeExpireIn < new Date(Date.now())) {
-    throw new AppError(httpStatus.BAD_REQUEST, 'Verify code is expired');
-  }
-  if (verifyCode !== user.verifyCode) {
-    throw new AppError(httpStatus.BAD_REQUEST, "Code doesn't match");
-  }
-  const result = await User.findOneAndUpdate(
-    { email: email },
-    { isVerified: true },
-    { new: true, runValidators: true },
-  );
-
-  if (!result) {
-    throw new AppError(
-      httpStatus.SERVICE_UNAVAILABLE,
-      'Server temporary unable please try again letter',
+    const user = await User.findOne({ email: email });
+    if (!user) {
+        throw new AppError(httpStatus.NOT_FOUND, 'User not found');
+    }
+    if (user.codeExpireIn < new Date(Date.now())) {
+        throw new AppError(httpStatus.BAD_REQUEST, 'Verify code is expired');
+    }
+    if (verifyCode !== user.verifyCode) {
+        throw new AppError(httpStatus.BAD_REQUEST, "Code doesn't match");
+    }
+    const result = await User.findOneAndUpdate(
+        { email: email },
+        { isVerified: true },
+        { new: true, runValidators: true }
     );
-  }
 
-  // Create JWT tokens
-  const jwtPayload = {
-    id: result?._id,
-    profileId: result?.profileId,
-    email: result?.email,
-    role: result?.role as TUserRole,
-  };
+    if (!result) {
+        throw new AppError(
+            httpStatus.SERVICE_UNAVAILABLE,
+            'Server temporary unable please try again letter'
+        );
+    }
 
-  const accessToken = createToken(
-    jwtPayload,
-    config.jwt_access_secret as string,
-    config.jwt_access_expires_in as string,
-  );
-  const refreshToken = createToken(
-    jwtPayload,
-    config.jwt_refresh_secret as string,
-    config.jwt_refresh_expires_in as string,
-  );
+    // Create JWT tokens
+    const jwtPayload = {
+        id: result?._id,
+        profileId: result?.profileId,
+        email: result?.email,
+        role: result?.role as TUserRole,
+    };
 
-  return {
-    accessToken,
-    refreshToken,
-  };
+    const accessToken = createToken(
+        jwtPayload,
+        config.jwt_access_secret as string,
+        config.jwt_access_expires_in as string
+    );
+    const refreshToken = createToken(
+        jwtPayload,
+        config.jwt_refresh_secret as string,
+        config.jwt_refresh_expires_in as string
+    );
+
+    return {
+        accessToken,
+        refreshToken,
+    };
 };
 
 const resendVerifyCode = async (email: string) => {
-  const user = await User.findOne({ email: email });
-  if (!user) {
-    throw new AppError(httpStatus.NOT_FOUND, 'User not found');
-  }
-  const verifyCode = generateVerifyCode();
-  const updateUser = await User.findOneAndUpdate(
-    { email: email },
-    { verifyCode: verifyCode, codeExpireIn: new Date(Date.now() + 5 * 60000) },
-    { new: true, runValidators: true },
-  );
-  if (!updateUser) {
-    throw new AppError(
-      httpStatus.INTERNAL_SERVER_ERROR,
-      'Something went wrong . Please again resend the code after a few second',
+    const user = await User.findOne({ email: email });
+    if (!user) {
+        throw new AppError(httpStatus.NOT_FOUND, 'User not found');
+    }
+    const verifyCode = generateVerifyCode();
+    const updateUser = await User.findOneAndUpdate(
+        { email: email },
+        {
+            verifyCode: verifyCode,
+            codeExpireIn: new Date(Date.now() + 5 * 60000),
+        },
+        { new: true, runValidators: true }
     );
-  }
-  sendEmail({
-    email: user.email,
-    subject: 'Activate Your Account',
-    html: registrationSuccessEmailBody('Dear', updateUser.verifyCode),
-  });
-  return null;
+    if (!updateUser) {
+        throw new AppError(
+            httpStatus.INTERNAL_SERVER_ERROR,
+            'Something went wrong . Please again resend the code after a few second'
+        );
+    }
+    sendEmail({
+        email: user.email,
+        subject: 'Activate Your Account',
+        html: registrationSuccessEmailBody('Dear', updateUser.verifyCode),
+    });
+    return null;
 };
 
 const getMyProfile = async (userData: JwtPayload) => {
-  let result = null;
-  if (userData.role === USER_ROLE.user) {
-    result = await NormalUser.findOne({ email: userData.email });
-  }
-  return result;
+    let result = null;
+    if (userData.role === USER_ROLE.user) {
+        result = await NormalUser.findOne({ email: userData.email });
+    } else if (userData.role === USER_ROLE.superAdmin) {
+        result = await SuperAdmin.findOne({ email: userData.email });
+    }
+    return result;
 };
 
 const deleteUserAccount = async (user: JwtPayload, password: string) => {
-  const userData = await User.findById(user.id);
+    const userData = await User.findById(user.id);
 
-  if (!userData) {
-    throw new AppError(httpStatus.NOT_FOUND, 'User not found');
-  }
-  if (!(await User.isPasswordMatched(password, userData?.password))) {
-    throw new AppError(httpStatus.FORBIDDEN, 'Password do not match');
-  }
+    if (!userData) {
+        throw new AppError(httpStatus.NOT_FOUND, 'User not found');
+    }
+    if (!(await User.isPasswordMatched(password, userData?.password))) {
+        throw new AppError(httpStatus.FORBIDDEN, 'Password do not match');
+    }
 
-  await NormalUser.findByIdAndDelete(user.profileId);
-  await User.findByIdAndDelete(user.id);
+    await NormalUser.findByIdAndDelete(user.profileId);
+    await User.findByIdAndDelete(user.id);
 
-  return null;
+    return null;
 };
 
 // all cron jobs for users
 
 cron.schedule('*/2 * * * *', async () => {
-  try {
-    const now = new Date();
+    try {
+        const now = new Date();
 
-    // Find unverified users whose expiration time has passed
-    const expiredUsers = await User.find({
-      isVerified: false,
-      codeExpireIn: { $lte: now },
-    });
+        // Find unverified users whose expiration time has passed
+        const expiredUsers = await User.find({
+            isVerified: false,
+            codeExpireIn: { $lte: now },
+        });
 
-    if (expiredUsers.length > 0) {
-      const expiredUserIds = expiredUsers.map((user) => user._id);
+        if (expiredUsers.length > 0) {
+            const expiredUserIds = expiredUsers.map((user) => user._id);
 
-      // Delete corresponding NormalUser documents
-      const normalUserDeleteResult = await NormalUser.deleteMany({
-        user: { $in: expiredUserIds },
-      });
+            // Delete corresponding NormalUser documents
+            const normalUserDeleteResult = await NormalUser.deleteMany({
+                user: { $in: expiredUserIds },
+            });
 
-      // Delete the expired User documents
-      const userDeleteResult = await User.deleteMany({
-        _id: { $in: expiredUserIds },
-      });
+            // Delete the expired User documents
+            const userDeleteResult = await User.deleteMany({
+                _id: { $in: expiredUserIds },
+            });
 
-      console.log(
-        `Deleted ${userDeleteResult.deletedCount} expired inactive users`,
-      );
-      console.log(
-        `Deleted ${normalUserDeleteResult.deletedCount} associated NormalUser documents`,
-      );
+            console.log(
+                `Deleted ${userDeleteResult.deletedCount} expired inactive users`
+            );
+            console.log(
+                `Deleted ${normalUserDeleteResult.deletedCount} associated NormalUser documents`
+            );
+        }
+    } catch (error) {
+        console.log('Error deleting expired users and associated data:', error);
     }
-  } catch (error) {
-    console.log('Error deleting expired users and associated data:', error);
-  }
 });
 
 const changeUserStatus = async (id: string) => {
-  const user = await User.findById(id);
-  if (!user) {
-    throw new AppError(httpStatus.NOT_FOUND, 'User not found');
-  }
-  const result = await User.findByIdAndUpdate(
-    id,
-    { isBlocked: !user.isBlocked },
-    { new: true, runValidators: true },
-  );
-  return result;
+    const user = await User.findById(id);
+    if (!user) {
+        throw new AppError(httpStatus.NOT_FOUND, 'User not found');
+    }
+    const result = await User.findByIdAndUpdate(
+        id,
+        { isBlocked: !user.isBlocked },
+        { new: true, runValidators: true }
+    );
+    return result;
 };
 
 const userServices = {
-  registerUser,
-  verifyCode,
-  resendVerifyCode,
-  getMyProfile,
-  changeUserStatus,
-  deleteUserAccount,
+    registerUser,
+    verifyCode,
+    resendVerifyCode,
+    getMyProfile,
+    changeUserStatus,
+    deleteUserAccount,
 };
 
 export default userServices;

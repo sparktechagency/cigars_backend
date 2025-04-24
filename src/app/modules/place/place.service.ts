@@ -178,15 +178,15 @@ const getAllPlace = async (query: Record<string, unknown>) => {
         },
         {
             $lookup: {
-                from: 'placetypes',
+                from: 'categories',
                 localField: 'placeType',
                 foreignField: '_id',
-                as: 'placeTypeDetails',
+                as: 'placeType',
             },
         },
         {
             $unwind: {
-                path: '$placeTypeDetails',
+                path: '$placeType',
                 preserveNullAndEmptyArrays: true,
             },
         }
@@ -217,7 +217,7 @@ const getAllPlace = async (query: Record<string, unknown>) => {
 };
 
 const getSinglePlace = async (id: string) => {
-    const place = await Place.findById(id);
+    const place = await Place.findById(id).populate('placeType');
     if (!place) {
         throw new AppError(httpStatus.NOT_FOUND, 'Place not found');
     }
@@ -239,7 +239,7 @@ const getSinglePlace = async (id: string) => {
 const updatePlaceDetails = async (placeId: string) => {
     try {
         // Fetch place from database
-        const place = await Place.findById(placeId);
+        const place = await Place.findById(placeId).populate('placeType');
         if (!place) {
             throw new AppError(httpStatus.NOT_FOUND, 'Place not found');
         }
@@ -250,10 +250,11 @@ const updatePlaceDetails = async (placeId: string) => {
         const { data }: { data: any } = await axios.get(googleUrl);
         console.log('data', data);
         if (!data.result) {
-            throw new AppError(
-                httpStatus.NOT_FOUND,
-                'Place not found in Google Maps'
-            );
+            // throw new AppError(
+            //     httpStatus.NOT_FOUND,
+            //     'Place not found in Google Maps'
+            // );
+            return place;
         }
 
         const updatedData = {
@@ -277,7 +278,7 @@ const updatePlaceDetails = async (placeId: string) => {
 
         const result = await Place.findByIdAndUpdate(placeId, updatedData, {
             new: true,
-        });
+        }).populate('placeType');
         return result;
     } catch (error) {
         console.error('Error updating place details:', error);
