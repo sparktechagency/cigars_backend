@@ -34,7 +34,7 @@ const addPlace = async (profileId: string, payload: IPlace) => {
         );
     }
     const placeDetails = data.result;
-    console.log('place ===============', placeDetails);
+    // console.log('place ===============', placeDetails);
     // Split the address by commas
     const addressParts = placeDetails?.formatted_address?.split(', ');
 

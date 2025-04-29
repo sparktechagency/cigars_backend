@@ -33,12 +33,11 @@ const getAllNotificationFromDB = async (
         return { meta, result };
     } else {
         const notificationQuery = new QueryBuilder(
-            Notification.find(
-                {
-                    $or: [{ receiver: user?.profileId }, { receiver: 'all' }],
-                },
-                { deleteBy: { $ne: user?.profileId } }
-            ),
+            Notification.find({
+                $or: [{ receiver: user?.id }, { receiver: 'all' }],
+                deleteBy: { $ne: user?.profileId },
+            }),
+
             query
         )
             .search(['title'])
