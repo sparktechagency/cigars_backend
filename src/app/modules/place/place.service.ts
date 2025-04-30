@@ -183,6 +183,7 @@ const getAllPlace = async (query: Record<string, unknown>) => {
                 location: 1,
                 placeType: 1,
                 distance: 1,
+                createdAt: 1,
             },
         },
         {
@@ -200,6 +201,13 @@ const getAllPlace = async (query: Record<string, unknown>) => {
             },
         }
     );
+
+    // sorting-----------
+    const sortBy = (query.sortBy as string) || 'createdAt';
+    const sortOrder = (query.sortOrder as string) === 'asc' ? 1 : -1;
+    pipeline.push({
+        $sort: { [sortBy]: sortOrder },
+    });
 
     // Implement pagination and count total records using `$facet`
     pipeline.push({
