@@ -36,14 +36,14 @@ router.get(
     ),
     userControllers.getMyProfile
 );
-
+//
 router.patch(
     '/change-status/:id',
     auth(USER_ROLE.superAdmin),
     validateRequest(userValidations.changeUserStatus),
     userControllers.changeUserStatus
 );
-router.delete(
+router.post(
     '/delete-account',
     auth(USER_ROLE.user),
     validateRequest(userValidations.deleteUserAccountValidationSchema),
