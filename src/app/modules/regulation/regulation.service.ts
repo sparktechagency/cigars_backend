@@ -23,6 +23,7 @@ const createRegulation = async (profileId: string, payload: IRegulation) => {
     return result;
 };
 
+// update regulations
 const updateRegulation = async (
     profileId: string,
     id: string,

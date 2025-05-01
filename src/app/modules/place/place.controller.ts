@@ -41,9 +41,7 @@ const approveRejectPlace = catchAsync(async (req, res) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
-        message: result
-            ? 'Place approved successfully'
-            : 'Place is rejected successfully',
+        message: `Place is ${result?.status} successfully`,
         data: result,
     });
 });

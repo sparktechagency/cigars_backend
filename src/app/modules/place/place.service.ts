@@ -157,6 +157,7 @@ const getAllPlace = async (query: Record<string, unknown>) => {
     const matchConditions: any = {};
     if (query.country) matchConditions.country = query.country;
     if (query.city) matchConditions.city = query.city;
+    if (query.status) matchConditions.status = query.status;
     if (query.placeType)
         matchConditions.placeType = new mongoose.Types.ObjectId(
             query.placeType as string
@@ -184,6 +185,7 @@ const getAllPlace = async (query: Record<string, unknown>) => {
                 placeType: 1,
                 distance: 1,
                 createdAt: 1,
+                updatedAt: 1,
             },
         },
         {
@@ -319,9 +321,9 @@ const approveRejectPlace = async (id: string, status: string) => {
     );
 
     await Notification.create({
-        title: 'Place rejected',
+        title: `Place ${status}`,
         message: `Admin ${status} you added place: ${place.name}`,
-        receiver: 'all',
+        receiver: place.addedby,
     });
     const notificationCount = await getNotificationCount(
         place.addedby.toString()
