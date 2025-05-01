@@ -205,7 +205,7 @@ const getAllPlace = async (query: Record<string, unknown>) => {
     );
 
     // sorting-----------
-    const sortBy = (query.sortBy as string) || 'createdAt';
+    const sortBy = (query.sortBy as string) || 'updatedAt';
     const sortOrder = (query.sortOrder as string) === 'asc' ? 1 : -1;
     pipeline.push({
         $sort: { [sortBy]: sortOrder },
