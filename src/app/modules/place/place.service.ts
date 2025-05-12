@@ -131,7 +131,7 @@ const getAllPlace = async (query: Record<string, unknown>) => {
     const page = parseInt(query.page as string) || 1;
     const limit = parseInt(query.limit as string) || 10;
     const skip = (page - 1) * limit;
-    const maxDistance = query.maxDistance || 5000; // 5 km radius
+    const maxDistance = Number(query.maxDistance) || 5000; // 5 km radius
 
     const pipeline: any[] = [];
 

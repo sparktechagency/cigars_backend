@@ -478,8 +478,9 @@ const resendVerifyCode = async (email: string) => {
 const loginWithOAuth = async (
     provider: string,
     token: string,
-    role: TUserRole
+    role: TUserRole = 'user'
 ) => {
+    console.log('provider , token', provider, token);
     let email, id, name, picture;
 
     try {
@@ -492,6 +493,7 @@ const loginWithOAuth = async (
             if (!payload) {
                 throw new AppError(httpStatus.BAD_REQUEST, 'Invalid token');
             }
+            console.log('paylaod', payload);
             email = payload.email!;
             id = payload.sub;
             name = payload.name!;
@@ -528,17 +530,28 @@ const loginWithOAuth = async (
                 name,
                 profilePic: picture,
                 role,
+                isVerified: true,
             });
             await user.save();
+            const nameParts = name.split(' ');
 
+            const firstName = nameParts[0];
+            const lastName = nameParts[1];
             const result = await NormalUser.create({
+                firstName,
+                lastName,
                 user: user._id,
                 email: email,
                 profile_image: picture,
             });
-            const updatedUser = await User.findByIdAndUpdate(user._id, {
-                profileId: result._id,
-            });
+            console.log(result);
+            const updatedUser = await User.findByIdAndUpdate(
+                user._id,
+                {
+                    profileId: result._id,
+                },
+                { new: true, runValidators: true }
+            );
             user = updatedUser;
         }
         if (!user) {
