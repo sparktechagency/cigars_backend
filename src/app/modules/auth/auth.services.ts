@@ -17,6 +17,7 @@ import NormalUser from '../normalUser/normalUser.model';
 import appleSigninAuth from 'apple-signin-auth';
 import { OAuth2Client } from 'google-auth-library';
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const GOOGLE_CLIENT_IDS = (process.env.GOOGLE_CLIENT_IDS || '').split(',');
 import axios from 'axios';
 const generateVerifyCode = (): number => {
     return Math.floor(10000 + Math.random() * 90000);
@@ -476,52 +477,207 @@ const resendVerifyCode = async (email: string) => {
 };
 
 // login with auth ====================
+// const loginWithOAuth = async (
+//     provider: string,
+//     token: string,
+//     role: TUserRole = 'user'
+// ) => {
+//     console.log('provider , token', provider, token);
+//     let email, id, name, picture;
+
+//     try {
+//         if (provider === 'google') {
+//             const ticket = await googleClient.verifyIdToken({
+//                 idToken: token,
+//                 audience: process.env.GOOGLE_CLIENT_ID,
+//             });
+//             const payload = ticket.getPayload();
+//             if (!payload) {
+//                 throw new AppError(httpStatus.BAD_REQUEST, 'Invalid token');
+//             }
+//             console.log('paylaod', payload);
+//             email = payload.email!;
+//             id = payload.sub;
+//             name = payload.name!;
+//             picture = payload.picture!;
+//         } else if (provider === 'facebook') {
+//             const response: any = await axios.get(
+//                 `https://graph.facebook.com/me?fields=id,email,name,picture&access_token=${token}`
+//             );
+//             email = response.data.email;
+//             id = response.data.id;
+//             name = response.data.name;
+//             picture = response.data.picture.data.url;
+//         } else if (provider === 'apple') {
+//             const appleUser = await appleSigninAuth.verifyIdToken(token, {
+//                 audience: process.env.APPLE_CLIENT_ID!,
+//                 ignoreExpiration: false,
+//             });
+//             email = appleUser.email;
+//             id = appleUser.sub;
+//             name = 'Apple User';
+//         } else {
+//             throw new AppError(
+//                 httpStatus.BAD_REQUEST,
+//                 'Invalid token, Please try again'
+//             );
+//         }
+
+//         let user = await User.findOne({ [`${provider}Id`]: id });
+
+//         if (!user) {
+//             user = new User({
+//                 email,
+//                 [`${provider}Id`]: id,
+//                 name,
+//                 profilePic: picture,
+//                 role,
+//                 isVerified: true,
+//             });
+//             await user.save();
+//             const nameParts = name.split(' ');
+
+//             const firstName = nameParts[0];
+//             const lastName = nameParts[1];
+//             const result = await NormalUser.create({
+//                 firstName,
+//                 lastName,
+//                 user: user._id,
+//                 email: email,
+//                 profile_image: picture,
+//             });
+//             console.log(result);
+//             const updatedUser = await User.findByIdAndUpdate(
+//                 user._id,
+//                 {
+//                     profileId: result._id,
+//                 },
+//                 { new: true, runValidators: true }
+//             );
+//             user = updatedUser;
+//         }
+//         if (!user) {
+//             throw new AppError(httpStatus.NOT_FOUND, 'user not found');
+//         }
+
+//         const jwtPayload = {
+//             id: user?._id,
+//             profileId: user?.profileId,
+//             email: user?.email,
+//             role: user?.role as TUserRole,
+//         };
+//         const accessToken = createToken(
+//             jwtPayload,
+//             config.jwt_access_secret as string,
+//             config.jwt_access_expires_in as string
+//         );
+//         const refreshToken = createToken(
+//             jwtPayload,
+//             config.jwt_refresh_secret as string,
+//             config.jwt_refresh_expires_in as string
+//         );
+
+//         return { accessToken, refreshToken };
+//     } catch (error) {
+//         console.error(error);
+//         throw new AppError(
+//             httpStatus.INTERNAL_SERVER_ERROR,
+//             'Something went wrong'
+//         );
+//     }
+// };
+
 const loginWithOAuth = async (
     provider: string,
     token: string,
     role: TUserRole = 'user'
 ) => {
-    console.log('provider , token', provider, token);
     let email, id, name, picture;
 
     try {
         if (provider === 'google') {
-            const ticket = await googleClient.verifyIdToken({
-                idToken: token,
-                audience: process.env.GOOGLE_CLIENT_ID,
-            });
-            const payload = ticket.getPayload();
-            if (!payload) {
-                throw new AppError(httpStatus.BAD_REQUEST, 'Invalid token');
+            try {
+                const ticket = await googleClient.verifyIdToken({
+                    idToken: token,
+                    // audience: process.env.GOOGLE_CLIENT_ID,
+                    audience: GOOGLE_CLIENT_IDS,
+                });
+
+                const payload = ticket.getPayload();
+                if (!payload) {
+                    throw new AppError(400, 'Invalid Google token payload');
+                }
+
+                email = payload.email!;
+                id = payload.sub;
+                name = payload.name!;
+                picture = payload.picture!;
+            } catch (err: any) {
+                if (
+                    err.message &&
+                    err.message.includes('Wrong recipient, payload audience')
+                ) {
+                    throw new AppError(
+                        401,
+                        'Google token audience mismatch. Please check your client ID.'
+                    );
+                }
+                throw new AppError(
+                    401,
+                    `Google token verification failed: ${err.message}`
+                );
             }
-            console.log('paylaod', payload);
-            email = payload.email!;
-            id = payload.sub;
-            name = payload.name!;
-            picture = payload.picture!;
         } else if (provider === 'facebook') {
-            const response: any = await axios.get(
-                `https://graph.facebook.com/me?fields=id,email,name,picture&access_token=${token}`
-            );
-            email = response.data.email;
-            id = response.data.id;
-            name = response.data.name;
-            picture = response.data.picture.data.url;
+            try {
+                const response: any = await axios.get(
+                    `https://graph.facebook.com/me?fields=id,email,name,picture&access_token=${token}`
+                );
+
+                if (!response.data || !response.data.id) {
+                    throw new AppError(
+                        400,
+                        'Invalid Facebook token or response'
+                    );
+                }
+
+                email = response.data.email;
+                id = response.data.id;
+                name = response.data.name;
+                picture = response.data.picture?.data?.url || '';
+            } catch (err: any) {
+                throw new AppError(
+                    401,
+                    `Facebook token verification failed: ${
+                        err.response?.data?.error?.message || err.message
+                    }`
+                );
+            }
         } else if (provider === 'apple') {
-            const appleUser = await appleSigninAuth.verifyIdToken(token, {
-                audience: process.env.APPLE_CLIENT_ID!,
-                ignoreExpiration: false,
-            });
-            email = appleUser.email;
-            id = appleUser.sub;
-            name = 'Apple User';
+            try {
+                const appleUser = await appleSigninAuth.verifyIdToken(token, {
+                    audience: process.env.APPLE_CLIENT_ID!,
+                    ignoreExpiration: false,
+                });
+
+                if (!appleUser || !appleUser.sub) {
+                    throw new AppError(400, 'Invalid Apple token payload');
+                }
+
+                email = appleUser.email;
+                id = appleUser.sub;
+                name = 'Apple User';
+                picture = '';
+            } catch (err: any) {
+                throw new AppError(
+                    401,
+                    `Apple token verification failed: ${err.message}`
+                );
+            }
         } else {
-            throw new AppError(
-                httpStatus.BAD_REQUEST,
-                'Invalid token, Please try again'
-            );
+            throw new AppError(400, 'Unsupported OAuth provider');
         }
 
+        // Find or create user
         let user = await User.findOne({ [`${provider}Id`]: id });
 
         if (!user) {
@@ -533,38 +689,40 @@ const loginWithOAuth = async (
                 role,
                 isVerified: true,
             });
-            await user.save();
-            const nameParts = name.split(' ');
 
+            await user.save();
+
+            const nameParts = name.split(' ');
             const firstName = nameParts[0];
-            const lastName = nameParts[1];
+            const lastName = nameParts[1] || '';
+
             const result = await NormalUser.create({
                 firstName,
                 lastName,
                 user: user._id,
-                email: email,
+                email,
                 profile_image: picture,
             });
-            console.log(result);
-            const updatedUser = await User.findByIdAndUpdate(
+
+            user = await User.findByIdAndUpdate(
                 user._id,
-                {
-                    profileId: result._id,
-                },
+                { profileId: result._id },
                 { new: true, runValidators: true }
             );
-            user = updatedUser;
-        }
-        if (!user) {
-            throw new AppError(httpStatus.NOT_FOUND, 'user not found');
         }
 
+        if (!user) {
+            throw new AppError(404, 'User not found after creation');
+        }
+
+        // Prepare JWT tokens
         const jwtPayload = {
-            id: user?._id,
-            profileId: user?.profileId,
-            email: user?.email,
-            role: user?.role as TUserRole,
+            id: user._id,
+            profileId: user.profileId,
+            email: user.email,
+            role: user.role as TUserRole,
         };
+
         const accessToken = createToken(
             jwtPayload,
             config.jwt_access_secret as string,
@@ -577,12 +735,16 @@ const loginWithOAuth = async (
         );
 
         return { accessToken, refreshToken };
-    } catch (error) {
-        console.error(error);
-        throw new AppError(
-            httpStatus.INTERNAL_SERVER_ERROR,
-            'Something went wrong'
-        );
+    } catch (error: any) {
+        console.error('OAuth login error:', error);
+
+        if (error instanceof AppError) {
+            // Forward AppError to frontend with status and message
+            throw error;
+        }
+
+        // Unknown error fallback
+        throw new AppError(500, 'Internal server error during OAuth login');
     }
 };
 
