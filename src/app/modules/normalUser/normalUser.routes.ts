@@ -10,7 +10,7 @@ const router = express.Router();
 
 router.patch(
     '/update-profile',
-    auth(USER_ROLE.user),
+    auth(USER_ROLE.user, USER_ROLE.superAdmin),
     uploadFile(),
     (req: Request, res: Response, next: NextFunction) => {
         if (req.body.data) {

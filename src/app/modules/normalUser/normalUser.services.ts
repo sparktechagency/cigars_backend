@@ -2,23 +2,46 @@ import httpStatus from 'http-status';
 import AppError from '../../error/appError';
 import { INormalUser } from './normalUser.interface';
 import NormalUser from './normalUser.model';
+import { JwtPayload } from 'jsonwebtoken';
+import { USER_ROLE } from '../user/user.constant';
+import SuperAdmin from '../superAdmin/superAdmin.model';
 
-const updateUserProfile = async (id: string, payload: Partial<INormalUser>) => {
+const updateUserProfile = async (
+    userData: JwtPayload,
+    payload: Partial<INormalUser>
+) => {
     if (payload.email) {
         throw new AppError(
             httpStatus.BAD_REQUEST,
             'You can not change the email'
         );
     }
-    const user = await NormalUser.findById(id);
-    if (!user) {
-        throw new AppError(httpStatus.NOT_FOUND, 'Profile not found');
+    if (userData.role == USER_ROLE.user) {
+        const user = await NormalUser.findById(userData.profileId);
+        if (!user) {
+            throw new AppError(httpStatus.NOT_FOUND, 'Profile not found');
+        }
+        const result = await NormalUser.findByIdAndUpdate(
+            userData.profileId,
+            payload,
+            {
+                new: true,
+                runValidators: true,
+            }
+        );
+        return result;
+    } else if (userData.role == USER_ROLE.superAdmin) {
+        const admin = await SuperAdmin.findById(userData.profileId);
+        if (!admin) {
+            throw new AppError(httpStatus.NOT_FOUND, 'Profile not found');
+        }
+        const reuslt = await SuperAdmin.findByIdAndUpdate(
+            userData.profileId,
+            payload,
+            { new: true, runValidators: true }
+        );
+        return reuslt;
     }
-    const result = await NormalUser.findByIdAndUpdate(id, payload, {
-        new: true,
-        runValidators: true,
-    });
-    return result;
 };
 
 const NormalUserServices = {

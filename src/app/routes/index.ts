@@ -8,43 +8,48 @@ import { notificationRoutes } from '../modules/notification/notification.routes'
 import { placeRoutes } from '../modules/place/place.routes';
 import { regulationRoutes } from '../modules/regulation/regulation.routes';
 import { categoryRoutes } from '../modules/category/category.routes';
+import { superAdminRoutes } from '../modules/superAdmin/superAdmin.routes';
 
 const router = Router();
 
 const moduleRoutes = [
-  {
-    path: '/auth',
-    router: authRoutes,
-  },
-  {
-    path: '/user',
-    router: userRoutes,
-  },
-  {
-    path: '/normal-user',
-    router: normalUserRoutes,
-  },
+    {
+        path: '/auth',
+        router: authRoutes,
+    },
+    {
+        path: '/user',
+        router: userRoutes,
+    },
+    {
+        path: '/normal-user',
+        router: normalUserRoutes,
+    },
 
-  {
-    path: '/manage',
-    router: ManageRoutes,
-  },
-  {
-    path: '/notification',
-    router: notificationRoutes,
-  },
-  {
-    path: '/place',
-    router: placeRoutes,
-  },
-  {
-    path: '/regulation',
-    router: regulationRoutes,
-  },
-  {
-    path: '/category',
-    router: categoryRoutes,
-  },
+    {
+        path: '/manage',
+        router: ManageRoutes,
+    },
+    {
+        path: '/notification',
+        router: notificationRoutes,
+    },
+    {
+        path: '/place',
+        router: placeRoutes,
+    },
+    {
+        path: '/regulation',
+        router: regulationRoutes,
+    },
+    {
+        path: '/category',
+        router: categoryRoutes,
+    },
+    {
+        path: '/super-admin',
+        router: superAdminRoutes,
+    },
 ];
 
 moduleRoutes.forEach((route) => router.use(route.path, route.router));

@@ -663,7 +663,7 @@ const loginWithOAuth = async (
                     throw new AppError(400, 'Invalid Apple token payload');
                 }
 
-                email = appleUser.email;
+                email = appleUser?.email || ' ';
                 id = appleUser.sub;
                 name = 'Apple User';
                 picture = '';

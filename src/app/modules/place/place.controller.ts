@@ -4,7 +4,7 @@ import sendResponse from '../../utilities/sendResponse';
 import PlaceService from './place.service';
 
 const addPlace = catchAsync(async (req, res) => {
-    const result = await PlaceService.addPlace(req.user.profileId, req?.body);
+    const result = await PlaceService.addPlace(req.user, req?.body);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,

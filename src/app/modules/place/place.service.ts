@@ -11,8 +11,12 @@ import Notification from '../notification/notification.model';
 import NormalUser from '../normalUser/normalUser.model';
 import { getIO } from '../../socket/socket';
 import getNotificationCount from '../../helper/getUnseenNotification';
+import { JwtPayload } from 'jsonwebtoken';
+import { USER_ROLE } from '../user/user.constant';
+import { ENUM_PlACE_STATUS } from '../../utilities/enum';
 // add anew place---------------------------
-const addPlace = async (profileId: string, payload: IPlace) => {
+const addPlace = async (userData: JwtPayload, payload: IPlace) => {
+    const { profileId } = userData;
     const io = getIO();
     const { googlePlaceId, placeType, description } = payload;
     const category = await Category.findById(placeType);
@@ -40,7 +44,7 @@ const addPlace = async (profileId: string, payload: IPlace) => {
 
     const city = addressParts[addressParts.length - 3];
     const country = addressParts[addressParts.length - 1];
-    const newPlace = {
+    const newPlace: any = {
         addedby: profileId,
         name: placeDetails.name,
         description,
@@ -113,6 +117,9 @@ const addPlace = async (profileId: string, payload: IPlace) => {
         //     : [],
     };
     // console.log('new place', newPlace);
+    if (userData.role == USER_ROLE.superAdmin) {
+        newPlace.status = ENUM_PlACE_STATUS.APPROVED;
+    }
     const result = await Place.create(newPlace);
     const user = await NormalUser.findById(profileId);
     await Notification.create({

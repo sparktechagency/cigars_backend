@@ -9,7 +9,7 @@ const updateUserProfile = catchAsync(async (req, res) => {
         req.body.profile_image = files['profile_image'][0].path;
     }
     const result = await NormalUserServices.updateUserProfile(
-        req.user.profileId,
+        req.user,
         req.body
     );
     sendResponse(res, {
