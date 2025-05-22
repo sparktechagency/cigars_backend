@@ -1,8 +1,8 @@
 import httpStatus from 'http-status';
 import AppError from '../../error/appError';
-import mongoose from 'mongoose';
 import { ICategory } from './category.interface';
 import Category from './category.model';
+import { deleteFileFromS3 } from '../../helper/deleteFromS3';
 
 // create category into db
 const createCategoryIntoDB = async (payload: ICategory) => {
@@ -39,33 +39,12 @@ const deleteCategoryFromDB = async (categoryId: string) => {
     if (!category) {
         throw new AppError(httpStatus.NOT_FOUND, 'Category not found');
     }
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
-    try {
-        const deletedCategory = await Category.findByIdAndDelete(categoryId, {
-            session,
-        });
-
-        if (!deletedCategory) {
-            throw new AppError(
-                httpStatus.NOT_FOUND,
-                'Category not found or does not belong to this shop'
-            );
-        }
-
-        await session.commitTransaction();
-        session.endSession();
-
-        return deletedCategory;
-    } catch (error) {
-        await session.abortTransaction();
-        session.endSession();
-
-        if (error instanceof mongoose.Error) {
-            throw new AppError(500, `Mongoose Error: ${error.message}`);
-        }
+    const result = await Category.findByIdAndDelete(categoryId);
+    if (category.category_image) {
+        deleteFileFromS3(category?.category_image);
     }
+
+    return result;
 };
 
 const categoryService = {

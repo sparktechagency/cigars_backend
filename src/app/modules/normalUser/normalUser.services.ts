@@ -5,6 +5,7 @@ import NormalUser from './normalUser.model';
 import { JwtPayload } from 'jsonwebtoken';
 import { USER_ROLE } from '../user/user.constant';
 import SuperAdmin from '../superAdmin/superAdmin.model';
+import { deleteFileFromS3 } from '../../helper/deleteFromS3';
 
 const updateUserProfile = async (
     userData: JwtPayload,
@@ -29,6 +30,9 @@ const updateUserProfile = async (
                 runValidators: true,
             }
         );
+        if (payload.profile_image && user.profile_image) {
+            deleteFileFromS3(user.profile_image);
+        }
         return result;
     } else if (userData.role == USER_ROLE.superAdmin) {
         const admin = await SuperAdmin.findById(userData.profileId);
@@ -40,6 +44,9 @@ const updateUserProfile = async (
             payload,
             { new: true, runValidators: true }
         );
+        if (payload.profile_image && admin.profile_image) {
+            deleteFileFromS3(admin.profile_image);
+        }
         return reuslt;
     }
 };

@@ -17,7 +17,7 @@ import NormalUser from '../normalUser/normalUser.model';
 import appleSigninAuth from 'apple-signin-auth';
 import { OAuth2Client } from 'google-auth-library';
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-const GOOGLE_CLIENT_IDS = (process.env.GOOGLE_CLIENT_IDS || '').split(',');
+// const GOOGLE_CLIENT_IDS = (process.env.GOOGLE_CLIENT_IDS || '').split(',');
 import axios from 'axios';
 const generateVerifyCode = (): number => {
     return Math.floor(10000 + Math.random() * 90000);
@@ -593,6 +593,8 @@ const loginWithOAuth = async (
     role: TUserRole = 'user'
 ) => {
     let email, id, name, picture;
+    console.log('token====================>', token);
+    console.log('provider================>', provider);
 
     try {
         if (provider === 'google') {
@@ -600,7 +602,8 @@ const loginWithOAuth = async (
                 const ticket = await googleClient.verifyIdToken({
                     idToken: token,
                     // audience: process.env.GOOGLE_CLIENT_ID,
-                    audience: GOOGLE_CLIENT_IDS,
+                    // audience: GOOGLE_CLIENT_IDS,
+                    audience: process.env.IOS_CLIENT_ID,
                 });
 
                 const payload = ticket.getPayload();
@@ -619,7 +622,7 @@ const loginWithOAuth = async (
                 ) {
                     throw new AppError(
                         401,
-                        'Google token audience mismatch. Please check your client ID.'
+                        `Google token audience mismatch. Please check your client ID. ${err.message}`
                     );
                 }
                 throw new AppError(

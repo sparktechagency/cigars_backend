@@ -2,27 +2,35 @@ import httpStatus from 'http-status';
 import { ISuperAdmin } from './superAdmin.interface';
 import AppError from '../../error/appError';
 import SuperAdmin from './superAdmin.model';
+import { deleteFileFromS3 } from '../../helper/deleteFromS3';
 
 const updateSuperAdminProfile = async (
-  id: string,
-  payload: Partial<ISuperAdmin>,
+    id: string,
+    payload: Partial<ISuperAdmin>
 ) => {
-  if (payload.email) {
-    throw new AppError(httpStatus.BAD_REQUEST, 'You can not change the email');
-  }
-  const user = await SuperAdmin.findById(id);
-  if (!user) {
-    throw new AppError(httpStatus.NOT_FOUND, 'Profile not found');
-  }
-  const result = await SuperAdmin.findByIdAndUpdate(id, payload, {
-    new: true,
-    runValidators: true,
-  });
-  return result;
+    if (payload.email) {
+        throw new AppError(
+            httpStatus.BAD_REQUEST,
+            'You can not change the email'
+        );
+    }
+    const user = await SuperAdmin.findById(id);
+    if (!user) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Profile not found');
+    }
+    const result = await SuperAdmin.findByIdAndUpdate(id, payload, {
+        new: true,
+        runValidators: true,
+    });
+
+    if (payload.profile_image && user.profile_image) {
+        deleteFileFromS3(user.profile_image);
+    }
+    return result;
 };
 
 const SuperAdminServices = {
-  updateSuperAdminProfile,
+    updateSuperAdminProfile,
 };
 
 export default SuperAdminServices;
