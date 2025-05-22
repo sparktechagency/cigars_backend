@@ -3,7 +3,6 @@ import { userRoutes } from '../modules/user/user.routes';
 import { authRoutes } from '../modules/auth/auth.routes';
 import { ManageRoutes } from '../modules/manage-web/manage.routes';
 import { normalUserRoutes } from '../modules/normalUser/normalUser.routes';
-
 import { notificationRoutes } from '../modules/notification/notification.routes';
 import { placeRoutes } from '../modules/place/place.routes';
 import { regulationRoutes } from '../modules/regulation/regulation.routes';
