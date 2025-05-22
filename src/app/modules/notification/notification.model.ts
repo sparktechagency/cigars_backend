@@ -24,7 +24,7 @@ const notificationSchema = new Schema<INotification>(
             default: [],
         },
     },
-
+    //
     {
         timestamps: true,
     }
