@@ -62,7 +62,7 @@ router.post(
     validateRequest(authValidations.resendResetCodeValidationSchema),
     authControllers.resendResetCode
 );
-
+//
 router.post(
     '/resend-verify-code',
     validateRequest(authValidations.resendResetCodeValidationSchema),
