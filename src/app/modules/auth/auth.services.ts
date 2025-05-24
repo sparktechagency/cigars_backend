@@ -687,34 +687,86 @@ const loginWithOAuth = async (
         // Find or create user
         let user = await User.findOne({ [`${provider}Id`]: id });
 
+        // if (!user) {
+        //     user = new User({
+        //         email,
+        //         [`${provider}Id`]: id,
+        //         name,
+        //         profilePic: picture,
+        //         role,
+        //         isVerified: true,
+        //     });
+
+        //     await user.save();
+        //     const nameParts = name.split(' ');
+        //     const firstName = nameParts[0];
+        //     const lastName = nameParts[1] || '';
+
+        //     const result = await NormalUser.create({
+        //         firstName,
+        //         lastName,
+        //         user: user._id,
+        //         email,
+        //         profile_image: picture,
+        //     });
+
+        //     user = await User.findByIdAndUpdate(
+        //         user._id,
+        //         { profileId: result._id },
+        //         { new: true, runValidators: true }
+        //     );
+        // }
         if (!user) {
-            user = new User({
-                email,
-                [`${provider}Id`]: id,
-                name,
-                profilePic: picture,
-                role,
-                isVerified: true,
-            });
+            const session = await mongoose.startSession();
+            session.startTransaction();
 
-            await user.save();
-            const nameParts = name.split(' ');
-            const firstName = nameParts[0];
-            const lastName = nameParts[1] || '';
+            try {
+                user = new User({
+                    email,
+                    [`${provider}Id`]: id,
+                    name,
+                    profilePic: picture,
+                    role,
+                    isVerified: true,
+                });
 
-            const result = await NormalUser.create({
-                firstName,
-                lastName,
-                user: user._id,
-                email,
-                profile_image: picture,
-            });
+                await user.save({ session });
 
-            user = await User.findByIdAndUpdate(
-                user._id,
-                { profileId: result._id },
-                { new: true, runValidators: true }
-            );
+                const nameParts = name.split(' ');
+                const firstName = nameParts[0];
+                const lastName = nameParts[1] || '';
+
+                const result = await NormalUser.create(
+                    [
+                        {
+                            firstName,
+                            lastName,
+                            user: user._id,
+                            email,
+                            profile_image: picture,
+                        },
+                    ],
+                    { session }
+                );
+
+                user = await User.findByIdAndUpdate(
+                    user._id,
+                    { profileId: result[0]._id },
+                    { new: true, runValidators: true, session }
+                );
+
+                await session.commitTransaction();
+                session.endSession();
+                //
+            } catch (error: any) {
+                await session.abortTransaction();
+                session.endSession();
+                throw new AppError(
+                    httpStatus.SERVICE_UNAVAILABLE,
+                    error.message ||
+                        'Something went wrong please try again letter'
+                );
+            }
         }
 
         if (!user) {
