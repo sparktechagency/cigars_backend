@@ -13,7 +13,7 @@ router.post(
     validateRequest(normalUserValidations.createNormalUserSchema),
     userControllers.registerUser
 );
-
+//
 router.post(
     '/verify-code',
     validateRequest(userValidations.verifyCodeValidationSchema),
