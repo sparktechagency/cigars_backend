@@ -29,7 +29,7 @@ const initializeSocket = (server: HTTPServer) => {
             socket.join(currentUserId as string);
             // set online user
             onlineUser.add(currentUserId);
-            // send to the client----------
+            // send to the client---------------
             io.emit('onlineUser', Array.from(onlineUser));
             socket.on('disconnect', () => {
                 console.log('A user disconnected:', socket.id);
