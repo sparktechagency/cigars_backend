@@ -16,7 +16,7 @@ import { USER_ROLE } from '../user/user.constant';
 import NormalUser from '../normalUser/normalUser.model';
 import appleSigninAuth from 'apple-signin-auth';
 import { OAuth2Client } from 'google-auth-library';
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+// const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 // const GOOGLE_CLIENT_IDS = (process.env.GOOGLE_CLIENT_IDS || '').split(',');
 import axios from 'axios';
 const generateVerifyCode = (): number => {
@@ -599,6 +599,7 @@ const loginWithOAuth = async (
         phoneType == 'ios'
             ? process.env.IOS_CLIENT_ID
             : process.env.ANDROID_CLIENT_ID;
+    const googleClient = new OAuth2Client(clientId);
     try {
         if (provider === 'google') {
             try {
@@ -697,7 +698,6 @@ const loginWithOAuth = async (
             });
 
             await user.save();
-
             const nameParts = name.split(' ');
             const firstName = nameParts[0];
             const lastName = nameParts[1] || '';

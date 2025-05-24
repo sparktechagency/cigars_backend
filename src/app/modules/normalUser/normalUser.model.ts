@@ -14,7 +14,8 @@ const NormalUserSchema = new Schema<INormalUser>(
         },
         lastName: {
             type: String,
-            required: true,
+            // required: true,
+            default: '',
         },
         email: {
             type: String,
