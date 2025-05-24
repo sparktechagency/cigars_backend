@@ -598,7 +598,7 @@ const loginWithOAuth = async (
     const clientId =
         phoneType == 'ios'
             ? process.env.IOS_CLIENT_ID
-            : process.env.ANDROID_CLIENT_IDsssss;
+            : process.env.ANDROID_CLIENT_ID;
     try {
         if (provider === 'google') {
             try {
