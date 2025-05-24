@@ -105,11 +105,16 @@ const resendVerifyCode = catchAsync(async (req, res) => {
 });
 
 const oAuthLogin = catchAsync(async (req, res) => {
-    const { provider, token, role } = req.body;
+    const { provider, token, role, phoneType } = req.body;
     if (!['google', 'apple', 'facebook'].includes(provider)) {
         throw new AppError(httpStatus.BAD_REQUEST, 'Invalid provider');
     }
-    const result = await authServices.loginWithOAuth(provider, token, role);
+    const result = await authServices.loginWithOAuth(
+        provider,
+        token,
+        role,
+        phoneType
+    );
     res.cookie('refresh-token', result.refreshToken, {
         httpOnly: true,
         secure: true,

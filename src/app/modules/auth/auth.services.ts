@@ -590,12 +590,15 @@ const resendVerifyCode = async (email: string) => {
 const loginWithOAuth = async (
     provider: string,
     token: string,
-    role: TUserRole = 'user'
+    role: TUserRole = 'user',
+    phoneType: string
 ) => {
     let email, id, name, picture;
-    console.log('token====================>', token);
-    console.log('provider================>', provider);
 
+    const clientId =
+        phoneType == 'ios'
+            ? process.env.IOS_CLIENT_ID
+            : process.env.ANDROID_CLIENT_IDsssss;
     try {
         if (provider === 'google') {
             try {
@@ -603,7 +606,7 @@ const loginWithOAuth = async (
                     idToken: token,
                     // audience: process.env.GOOGLE_CLIENT_ID,
                     // audience: GOOGLE_CLIENT_IDS,
-                    audience: process.env.IOS_CLIENT_ID,
+                    audience: clientId,
                 });
 
                 const payload = ticket.getPayload();
