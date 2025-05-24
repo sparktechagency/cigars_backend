@@ -41,7 +41,7 @@ app.post('/search-place', async (req, res) => {
         if (!address) {
             return res.status(400).json({ error: 'Address is required' });
         }
-        // console.log('key', apiKey);
+        // console.log('key', apiKey);---
 
         console.log(encodeURIComponent(address));
         const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
