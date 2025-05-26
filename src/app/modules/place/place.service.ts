@@ -160,6 +160,12 @@ const getAllPlace = async (query: Record<string, unknown>) => {
         pipeline.push({
             $sort: { distance: -1 },
         });
+    } else {
+        const sortBy = (query.sortBy as string) || 'updatedAt';
+        const sortOrder = (query.sortOrder as string) === 'asc' ? 1 : -1;
+        pipeline.push({
+            $sort: { [sortBy]: sortOrder },
+        });
     }
 
     // filter conditions --------------------------
@@ -214,11 +220,11 @@ const getAllPlace = async (query: Record<string, unknown>) => {
     );
 
     // sorting-----------
-    const sortBy = (query.sortBy as string) || 'updatedAt';
-    const sortOrder = (query.sortOrder as string) === 'asc' ? 1 : -1;
-    pipeline.push({
-        $sort: { [sortBy]: sortOrder },
-    });
+    // const sortBy = (query.sortBy as string) || 'updatedAt';
+    // const sortOrder = (query.sortOrder as string) === 'asc' ? 1 : -1;
+    // pipeline.push({
+    //     $sort: { [sortBy]: sortOrder },
+    // });
 
     // Implement pagination and count total records using `$facet`
     pipeline.push({

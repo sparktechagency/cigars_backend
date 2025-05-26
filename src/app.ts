@@ -67,7 +67,8 @@ app.post('/search-place', async (req, res) => {
 
 app.get('/get-country-city', async (req, res) => {
     try {
-        const city = await getAllCities();
+        const countryQuery = req.query.country as string | undefined;
+        const city = await getAllCities(countryQuery);
         const country = await getAllCountries();
         const placeTypes = await Category.find({}).select('name');
         return res.status(200).json({ city, country, placeTypes });

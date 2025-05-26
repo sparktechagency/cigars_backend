@@ -1,15 +1,17 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import Place from '../modules/place/place.model';
 
-export const getAllCities = async () => {
+export const getAllCities = async (country: string | undefined) => {
+    const matchConditions: any = {
+        city: { $ne: '', $exists: true },
+    };
+
+    if (country) {
+        matchConditions.country = country;
+    }
+
     const cities = await Place.aggregate([
-        {
-            $match: {
-                city: {
-                    $ne: '',
-                    $exists: true,
-                },
-            },
-        },
+        { $match: matchConditions },
         {
             $group: {
                 _id: '$city',
@@ -22,6 +24,7 @@ export const getAllCities = async () => {
             },
         },
     ]);
+
     const cityNames = cities.map((city) => city.city);
 
     return cityNames;
