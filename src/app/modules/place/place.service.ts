@@ -157,6 +157,9 @@ const getAllPlace = async (query: Record<string, unknown>) => {
                 spherical: true,
             },
         });
+        pipeline.push({
+            $sort: { distance: -1 },
+        });
     }
 
     // filter conditions --------------------------
