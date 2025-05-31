@@ -23,7 +23,7 @@ async function main() {
         //     );
         //     seedSuperAdmin();
         // });
-        //pppp
+        //pppp-00
         myServer = server.listen(port, '0.0.0.0', () => {
             logger.info(`Server running on http://0.0.0.0:${port}`);
             seedSuperAdmin();
