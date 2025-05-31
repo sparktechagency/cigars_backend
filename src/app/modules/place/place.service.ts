@@ -14,6 +14,44 @@ import getNotificationCount from '../../helper/getUnseenNotification';
 import { JwtPayload } from 'jsonwebtoken';
 import { USER_ROLE } from '../user/user.constant';
 import { ENUM_PlACE_STATUS } from '../../utilities/enum';
+
+// function extractCity(place: any) {
+//     if (!place || !place.address_components) return null;
+
+//     const cityComponent = place.address_components.find((component: any) =>
+//         component.types.includes('locality')
+//     );
+
+//     return cityComponent ? cityComponent.long_name : null;
+// }
+
+function extractCity(addressComponents: any) {
+    if (!addressComponents || !Array.isArray(addressComponents)) return null;
+
+    // Priority order of types to check for "city"
+    const priorityTypes = [
+        'locality', // Preferred
+        'administrative_area_level_2', // Often city or municipality
+        'administrative_area_level_3', // Sub-district
+        'postal_town', // UK-specific fallback
+    ];
+
+    for (const type of priorityTypes) {
+        const component = addressComponents.find((c) => c.types.includes(type));
+        if (component) return component.long_name;
+    }
+
+    return null; // Could not find a suitable city component
+}
+function extractCountry(place: any) {
+    if (!place || !place.address_components) return null;
+
+    const countryComponent = place.address_components.find((component: any) =>
+        component.types.includes('country')
+    );
+
+    return countryComponent ? countryComponent.long_name : null;
+}
 // add anew place---------------------------
 const addPlace = async (userData: JwtPayload, payload: IPlace) => {
     const { profileId } = userData;
@@ -29,7 +67,7 @@ const addPlace = async (userData: JwtPayload, payload: IPlace) => {
     }
     const GOOGLE_API_KEY = config.google_api_key;
     // const googleUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${googlePlaceId}&fields=name,formatted_address,geometry/location,formatted_phone_number,opening_hours,rating,photos,types&key=${GOOGLE_API_KEY}`;
-    const googleUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${googlePlaceId}&fields=name,formatted_address,geometry/location,formatted_phone_number,opening_hours,rating,types&key=${GOOGLE_API_KEY}`;
+    const googleUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${googlePlaceId}&fields=name,formatted_address,geometry/location,formatted_phone_number,opening_hours,rating,types,address_components&key=${GOOGLE_API_KEY}`;
     const { data }: { data: any } = await axios.get(googleUrl);
     if (!data.result) {
         throw new AppError(
@@ -38,12 +76,12 @@ const addPlace = async (userData: JwtPayload, payload: IPlace) => {
         );
     }
     const placeDetails = data.result;
-    // console.log('place ===============', placeDetails);
-    // Split the address by commas
-    const addressParts = placeDetails?.formatted_address?.split(', ');
+    const country = extractCountry(placeDetails);
+    // const addressParts = placeDetails?.formatted_address?.split(', ');
+    // const city = addressParts[addressParts.length - 3];
+    const city = extractCity(placeDetails?.address_components);
+    // const country = addressParts[addressParts.length - 1];
 
-    const city = addressParts[addressParts.length - 3];
-    const country = addressParts[addressParts.length - 1];
     const newPlace: any = {
         addedby: profileId,
         name: placeDetails.name,
@@ -256,7 +294,8 @@ const getSinglePlace = async (id: string) => {
         throw new AppError(httpStatus.NOT_FOUND, 'Place not found');
     }
     //!TODO: if need to increase or decrase update place time
-    const TWO_DAYS = 2 * 24 * 60 * 60 * 1000;
+    // const TWO_DAYS = 2 * 24 * 60 * 60 * 1000;
+    const TWO_DAYS = 1 * 60 * 1000;
     const lastUpdated = new Date(place.updatedAt).getTime();
     const now = Date.now();
 
@@ -279,29 +318,38 @@ const updatePlaceDetails = async (placeId: string) => {
         }
 
         const GOOGLE_API_KEY = config.google_api_key;
-        // const googleUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.googlePlaceId}&fields=rating,opening_hours,photos&key=${GOOGLE_API_KEY}`;
-        const googleUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.googlePlaceId}&fields=name,formatted_address,geometry/location,formatted_phone_number,opening_hours,rating,types&key=${GOOGLE_API_KEY}`;
+        const googleUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.googlePlaceId}&fields=name,formatted_address,geometry/location,formatted_phone_number,opening_hours,rating,types,address_components&key=${GOOGLE_API_KEY}`;
         const { data }: { data: any } = await axios.get(googleUrl);
-        console.log('data', data);
         if (!data.result) {
-            // throw new AppError(
-            //     httpStatus.NOT_FOUND,
-            //     'Place not found in Google Maps'
-            // );
             return place;
         }
-
+        // console.log('data', data.result.address_components);
+        const city = extractCity(data?.result.address_components);
+        const country = extractCountry(data?.result);
         const updatedData = {
+            // updated work
+            name: data?.result?.name,
+            address: data?.result?.formatted_address,
+            location: {
+                type: 'Point',
+                coordinates: [
+                    data?.result?.geometry.location.lng,
+                    data?.result?.geometry.location.lat,
+                ],
+            },
+            city,
+            country,
+            phone: data?.result?.formatted_phone_number || '',
             averageRating: data.result.rating || place.averageRating,
-
-            openingHours:
-                data.opening_hours?.periods?.map((period: any) => ({
-                    open: period.open?.time || '',
-                    close: period.close?.time || '',
-                    openDay: period.open?.day ?? null,
-                    closeDay: period.close?.day ?? null,
-                    closed: !period.open && !period.close,
-                })) || [],
+            openingHour: data?.result?.opening_hours?.weekday_text,
+            // openingHours:
+            //     data?.result?.opening_hours?.periods?.map((period: any) => ({
+            //         open: period.open?.time || '',
+            //         close: period.close?.time || '',
+            //         openDay: period.open?.day ?? null,
+            //         closeDay: period.close?.day ?? null,
+            //         closed: !period.open && !period.close,
+            //     })) || [],
             //   images: data.result.photos
             //     ? data.result.photos.map(
             //         (photo: any) =>
