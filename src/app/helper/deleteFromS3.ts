@@ -17,39 +17,44 @@ const s3 = new S3Client({
     },
 });
 
-export const deleteFileFromS3 = async (fileName: string) => {
-    const decodedFileName = decodeURIComponent(fileName);
+export const deleteFileFromS3 = async (fileUrl: string) => {
+    // Extract the path after the domain
+    const url = new URL(fileUrl);
+    const fileKey = decodeURIComponent(url.pathname.substring(1)); // remove leading '/'
 
-    const bucket = process.env.AWS_BUCKET_NAME!;
+    const bucket = process.env.AWS_S3_BUCKET_NAME;
+    if (!bucket) {
+        throw new Error('AWS_S3_BUCKET_NAME environment variable is not set');
+    }
 
     try {
-        // 1. Check if the file exists in S3
+        // Check if the file exists in S3
         const headCommand = new HeadObjectCommand({
             Bucket: bucket,
-            Key: decodedFileName,
+            Key: fileKey,
         });
 
         try {
             await s3.send(headCommand);
         } catch (err: any) {
             if (err.name === 'NotFound') {
-                console.log(`File ${decodedFileName} does not exist in S3.`);
+                console.log(`File ${fileKey} does not exist in S3.`);
                 return;
             }
             throw err;
         }
 
-        // 2. Delete the file
+        // Delete the file
         const deleteCommand = new DeleteObjectCommand({
             Bucket: bucket,
-            Key: decodedFileName,
+            Key: fileKey,
         });
 
         await s3.send(deleteCommand);
-        console.log(`Successfully deleted ${decodedFileName} from S3`);
+        console.log(`Successfully deleted ${fileKey} from S3`);
     } catch (err: any) {
         if (err.name === 'NotFound') {
-            console.error(`File ${decodedFileName} was not found in S3.`);
+            console.error(`File ${fileKey} was not found in S3.`);
         } else {
             console.error('Error deleting file from S3:', err);
         }
