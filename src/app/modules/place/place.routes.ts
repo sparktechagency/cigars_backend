@@ -15,12 +15,12 @@ router.post(
 );
 router.get(
     '/get-all-place',
-    auth(USER_ROLE.user, USER_ROLE.superAdmin),
+    // auth(USER_ROLE.user, USER_ROLE.superAdmin),
     PlaceController.getAllPlace
 );
 router.get(
     '/get-single-place/:id',
-    auth(USER_ROLE.user, USER_ROLE.superAdmin),
+    // auth(USER_ROLE.user, USER_ROLE.superAdmin),
     PlaceController.getSinglePlace
 );
 
