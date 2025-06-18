@@ -15,6 +15,7 @@ const createRegulation = catchAsync(async (req, res) => {
         data: result,
     });
 });
+//
 const updateRegulation = catchAsync(async (req, res) => {
     const result = await RegulationService.updateRegulation(
         req.user.profileId,
