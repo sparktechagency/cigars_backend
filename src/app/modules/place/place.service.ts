@@ -165,8 +165,8 @@ const addPlace = async (userData: JwtPayload, payload: IPlace) => {
     const user = await NormalUser.findById(profileId);
     await Notification.create({
         title: user ? user.firstName + user.lastName : 'Admin',
-        message: `Added a new place: ${result.name}`,
-        receiver: 'all',
+        message: `${result.name} has been added to your platform. Please review it!`,
+        receiver: USER_ROLE.superAdmin,
     });
     // const notificationCount = await getNotificationCount();
 
@@ -175,7 +175,7 @@ const addPlace = async (userData: JwtPayload, payload: IPlace) => {
     await sendSinglePushNotification(
         admin!.user.toString(),
         'New place added!',
-        `${result.name} has been added to our platform. Please review it!`,
+        `${result.name} has been added to your platform. Please review it!`,
         { placeId: result._id }
     );
 
@@ -399,11 +399,11 @@ const approveRejectPlace = async (id: string, status: string) => {
         { new: true, runValidators: true }
     );
 
-    // await Notification.create({
-    //     title: `Place ${status}`,
-    //     message: `Admin ${status} you added place: ${place.name}`,
-    //     receiver: place.addedby,
-    // });
+    await Notification.create({
+        title: `Place ${status}`,
+        message: `${place.name} has been ${status} by admin that you added.`,
+        receiver: place.addedby,
+    });
     // const notificationCount = await getNotificationCount(
     //     place.addedby.toString()
     // );
