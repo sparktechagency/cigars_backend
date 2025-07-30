@@ -47,6 +47,7 @@ const registerUser = async (
             role: USER_ROLE.user,
             verifyCode,
             codeExpireIn: new Date(Date.now() + 2 * 60000),
+            playerIds: [userData.playerId],
         };
 
         // eslint-disable-next-line @typescript-eslint/no-unused-vars

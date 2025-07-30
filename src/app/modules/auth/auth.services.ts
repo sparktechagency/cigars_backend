@@ -46,6 +46,27 @@ const loginUserIntoDB = async (payload: TLoginUser) => {
     if (!(await User.isPasswordMatched(payload?.password, user?.password))) {
         throw new AppError(httpStatus.FORBIDDEN, 'Password do not match');
     }
+
+    if (payload.playerId) {
+        const currentPlayerIds = user.playerIds || [];
+
+        // If already exists, remove it first (to avoid duplicates)
+        const filtered = currentPlayerIds.filter(
+            (id) => id !== payload.playerId
+        );
+
+        // Add the new one to the end
+        filtered.push(payload.playerId);
+
+        // If length > 3, remove from beginning
+        if (filtered.length > 3) {
+            filtered.shift();
+        }
+
+        user.playerIds = filtered;
+        await user.save();
+    }
+
     const jwtPayload = {
         id: user?._id,
         profileId: user.profileId,

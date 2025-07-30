@@ -9,11 +9,14 @@ import Category from '../category/category.model';
 import mongoose from 'mongoose';
 import Notification from '../notification/notification.model';
 import NormalUser from '../normalUser/normalUser.model';
-import { getIO } from '../../socket/socket';
-import getNotificationCount from '../../helper/getUnseenNotification';
+// import { getIO } from '../../socket/socket';
+// import getNotificationCount from '../../helper/getUnseenNotification';
 import { JwtPayload } from 'jsonwebtoken';
 import { USER_ROLE } from '../user/user.constant';
 import { ENUM_PlACE_STATUS } from '../../utilities/enum';
+import SuperAdmin from '../superAdmin/superAdmin.model';
+import { sendSinglePushNotification } from '../../helper/sendPushNotification';
+// import { User } from '../user/user.model';
 
 // function extractCity(place: any) {
 //     if (!place || !place.address_components) return null;
@@ -55,7 +58,7 @@ function extractCountry(place: any) {
 // add anew place---------------------------
 const addPlace = async (userData: JwtPayload, payload: IPlace) => {
     const { profileId } = userData;
-    const io = getIO();
+    // const io = getIO();
     const { googlePlaceId, placeType, description } = payload;
     const category = await Category.findById(placeType);
     if (!category) {
@@ -165,9 +168,23 @@ const addPlace = async (userData: JwtPayload, payload: IPlace) => {
         message: `Added a new place: ${result.name}`,
         receiver: 'all',
     });
-    const notificationCount = await getNotificationCount();
+    // const notificationCount = await getNotificationCount();
 
-    io.emit('notifications', notificationCount);
+    // io.emit('notifications', notificationCount);
+    const admin = await SuperAdmin.findOne();
+    await sendSinglePushNotification(
+        admin!.user.toString(),
+        'New place added!',
+        `${result.name} has been added to our platform.`,
+        { placeId: result._id }
+    );
+
+    await sendSinglePushNotification(
+        user!.user.toString(),
+        'New place added!',
+        `Place added successfully , wait for admin review`,
+        { placeId: result._id }
+    );
 
     return result;
 };
@@ -371,7 +388,7 @@ const updatePlaceDetails = async (placeId: string) => {
 };
 
 const approveRejectPlace = async (id: string, status: string) => {
-    const io = getIO();
+    // const io = getIO();
     const place = await Place.findById(id);
     if (!place) {
         throw new AppError(httpStatus.NOT_FOUND, 'Place not found');
@@ -382,15 +399,22 @@ const approveRejectPlace = async (id: string, status: string) => {
         { new: true, runValidators: true }
     );
 
-    await Notification.create({
-        title: `Place ${status}`,
-        message: `Admin ${status} you added place: ${place.name}`,
-        receiver: place.addedby,
-    });
-    const notificationCount = await getNotificationCount(
-        place.addedby.toString()
+    // await Notification.create({
+    //     title: `Place ${status}`,
+    //     message: `Admin ${status} you added place: ${place.name}`,
+    //     receiver: place.addedby,
+    // });
+    // const notificationCount = await getNotificationCount(
+    //     place.addedby.toString()
+    // );
+    // io.to(place.addedby.toString()).emit('notifications', notificationCount);
+    const user = await NormalUser.findById(place.addedby).select('user');
+    await sendSinglePushNotification(
+        user!.user.toString(),
+        'New place added!',
+        `${place.name} has been ${status} by admin that you added.`,
+        { placeId: place._id }
     );
-    io.to(place.addedby.toString()).emit('notifications', notificationCount);
     return result;
 };
 

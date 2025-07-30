@@ -1,54 +1,86 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from 'axios';
+import { User } from '../modules/user/user.model';
 
-const ONESIGNAL_APP_ID = 'YOUR_ONESIGNAL_APP_ID';
-const ONESIGNAL_API_KEY = 'YOUR_ONESIGNAL_API_KEY';
+const ONESIGNAL_APP_ID = process.env.ONESIGNAL_APP_ID!;
+const ONESIGNAL_API_KEY = process.env.ONESIGNAL_API_KEY!;
 
-interface INotificationPayload {
-  playerIds: string[]; // List of OneSignal Player IDs to send notification to
-  message: string; // The message body of the notification
-  heading?: string; // The title/heading of the notification
-  url?: string; // Optional URL to open when notification is clicked
-  data?: object; // Optional additional data to send with the notification
-}
+type NotificationData = Record<string, any>;
 
-const sendNotification = async ({
-  playerIds,
-  message,
-  heading = 'Notification', // Default heading
-  url,
-  data,
-}: INotificationPayload) => {
-  if (playerIds.length === 0) {
-    console.error('No Player IDs provided.');
-    return;
-  }
+const sendNotification = async (
+    playerIds: string[],
+    title: string,
+    message: string,
+    data: NotificationData = {}
+) => {
+    if (!ONESIGNAL_APP_ID || !ONESIGNAL_API_KEY) {
+        throw new Error('Missing OneSignal credentials');
+    }
 
-  try {
-    const payload = {
-      app_id: ONESIGNAL_APP_ID,
-      include_player_ids: playerIds, // Send notification to these Player IDs
-      contents: { en: message },
-      headings: { en: heading },
-      url, // Optional URL to open on notification click
-      data, // Optional data (e.g., order info)
-    };
+    if (playerIds.length === 0) {
+        console.warn('No playerIds provided, skipping notification');
+        return;
+    }
 
-    const response = await axios.post(
-      'https://onesignal.com/api/v1/notifications',
-      payload,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Basic ${ONESIGNAL_API_KEY}`,
-        },
-      },
-    );
+    try {
+        const response = await axios.post(
+            'https://onesignal.com/api/v1/notifications',
+            {
+                app_id: ONESIGNAL_APP_ID,
+                include_player_ids: playerIds,
+                headings: { en: title },
+                contents: { en: message },
+                data,
+            },
+            {
+                headers: {
+                    Authorization: `Basic ${ONESIGNAL_API_KEY}`,
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
 
-    console.log('Notification sent successfully:', response.data);
-    return response.data;
-  } catch (error) {
-    console.error('Error sending notification:', error);
-  }
+        return response.data;
+    } catch (error: any) {
+        console.error(
+            'Error sending OneSignal notification:',
+            error?.response?.data || error.message
+        );
+        throw error;
+    }
 };
 
-export default sendNotification;
+// Send notification to single user by userId
+export const sendSinglePushNotification = async (
+    userId: string,
+    title: string,
+    message: string,
+    data: NotificationData = {}
+) => {
+    const user = await User.findById(userId).select('playerIds');
+    if (!user || !user.playerIds.length) return;
+
+    return sendNotification(user.playerIds, title, message, data);
+};
+
+// Send notification to multiple users by userIds
+export const sendBatchPushNotification = async (
+    userIds: string[],
+    title: string,
+    message: string,
+    data: NotificationData = {}
+) => {
+    const users = await User.find({ _id: { $in: userIds } }).select(
+        'playerIds'
+    );
+
+    const allPlayerIds = users.reduce<string[]>((acc, user) => {
+        if (user.playerIds && user.playerIds.length)
+            acc.push(...user.playerIds);
+        return acc;
+    }, []);
+
+    if (allPlayerIds.length === 0) return;
+
+    return sendNotification(allPlayerIds, title, message, data);
+};

@@ -7,4 +7,5 @@ export interface INormalUser {
     lastName: string;
     email: string;
     profile_image: string;
+    playerId: string;
 }
