@@ -175,7 +175,7 @@ const addPlace = async (userData: JwtPayload, payload: IPlace) => {
     await sendSinglePushNotification(
         admin!.user.toString(),
         'New place added!',
-        `${result.name} has been added to our platform.`,
+        `${result.name} has been added to our platform. Please review it!`,
         { placeId: result._id }
     );
 
