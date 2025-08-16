@@ -612,7 +612,8 @@ const loginWithOAuth = async (
     provider: string,
     token: string,
     role: TUserRole = 'user',
-    phoneType: string
+    phoneType: string,
+    playerId?: string
 ) => {
     let email, id, name, picture;
 
@@ -749,6 +750,7 @@ const loginWithOAuth = async (
                     profilePic: picture,
                     role,
                     isVerified: true,
+                    playerIds: playerId ? [playerId] : [],
                 });
 
                 await user.save({ session });

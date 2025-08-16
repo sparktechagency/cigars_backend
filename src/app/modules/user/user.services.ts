@@ -23,6 +23,7 @@ const generateVerifyCode = (): number => {
 const registerUser = async (
     password: string,
     confirmPassword: string,
+    playerId: string,
     userData: INormalUser
 ) => {
     if (password !== confirmPassword) {
@@ -38,7 +39,6 @@ const registerUser = async (
     }
     const session = await mongoose.startSession();
     session.startTransaction();
-
     try {
         const verifyCode = generateVerifyCode();
         const userDataPayload: Partial<TUser> = {
@@ -47,8 +47,10 @@ const registerUser = async (
             role: USER_ROLE.user,
             verifyCode,
             codeExpireIn: new Date(Date.now() + 2 * 60000),
-            playerIds: [userData.playerId],
         };
+        if (playerId) {
+            userDataPayload.playerIds = [playerId];
+        }
 
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const user = await User.create([userDataPayload], { session });

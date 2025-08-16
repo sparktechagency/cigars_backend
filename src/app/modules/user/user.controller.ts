@@ -7,6 +7,7 @@ const registerUser = catchAsync(async (req, res) => {
     const result = await userServices.registerUser(
         req.body.password,
         req.body.confirmPassword,
+        req.body.playerId,
         req.body.userData
     );
     sendResponse(res, {

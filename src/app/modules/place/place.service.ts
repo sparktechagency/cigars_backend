@@ -163,10 +163,19 @@ const addPlace = async (userData: JwtPayload, payload: IPlace) => {
     }
     const result = await Place.create(newPlace);
     const user = await NormalUser.findById(profileId);
+    if (!user) {
+        throw new AppError(httpStatus.NOT_FOUND, 'User not found');
+    }
+    console.log('user', user);
     await Notification.create({
         title: user ? user.firstName + user.lastName : 'Admin',
         message: `${result.name} has been added to your platform. Please review it!`,
         receiver: USER_ROLE.superAdmin,
+    });
+    await Notification.create({
+        title: 'Your place added successfully',
+        message: `Your place ${result.name} has been added successfully, wait for admin review`,
+        receiver: user._id,
     });
     // const notificationCount = await getNotificationCount();
 

@@ -39,7 +39,6 @@ const sendNotification = async (
                 },
             }
         );
-
         return response.data;
     } catch (error: any) {
         console.error(
@@ -59,7 +58,6 @@ export const sendSinglePushNotification = async (
 ) => {
     const user = await User.findById(userId).select('playerIds');
     if (!user || !user.playerIds.length) return;
-
     return sendNotification(user.playerIds, title, message, data);
 };
 

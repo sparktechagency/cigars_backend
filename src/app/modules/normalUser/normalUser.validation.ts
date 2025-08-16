@@ -13,6 +13,7 @@ export const createNormalUserSchema = z.object({
             lastName: z.string().nonempty('Name is required'),
             email: z.string().email('Invalid email format'),
         }),
+        playerId: z.string().optional(),
     }),
 });
 export const updateNormalUserData = z.object({
